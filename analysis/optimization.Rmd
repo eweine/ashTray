@@ -1,0 +1,867 @@
+---
+title: "Optimization Over Separable Covariance Matrices"
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+date: "2025-01-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Introduction
+
+Here, I consider fitting the following model to matrix variate data:
+
+$$\textrm{vec}(Y_{1}), \dots, \textrm{vec}(Y_{n}) \sim \mathcal{N}(0, I + R \otimes C)$$
+I consider two possible ways of fitting this model. First, simply finding the MLE of $R$ and $C$ under the model specified above. In this case, I parameterize $R$ and $C$ by their cholesky factors to ensure that $R$ and $C$ are PSD. Second, I consider finding the empirical covariance $\hat{\Sigma}$ of $\textrm{vec}(Y_{1}), \dots, \textrm{vec}(Y_{n})$, and then find the PSD $R$ and $C$ such that $||\hat{\Sigma} - (I + R \otimes C)||_{F}$ is minimized. This minimization problem can easily be solved using an alternating least squares approach.
+
+```{r}
+get_n_chol_idx <- function(p) {
+  
+  round((p * (p - 1)) / 2)
+  
+}
+
+# get matrix from log-cholesky parameterization
+get_mat_from_log_chol <- function(chol_vals, diag_vals) {
+  
+  d <- length(diag_vals)
+  L <- matrix(data = 0, nrow = d, ncol = d)
+  L[lower.tri(L)] <- chol_vals
+  diag(L) <- exp(diag_vals)
+  M <- tcrossprod(L)
+  return(M)
+  
+}
+
+# get negative of log likelihood using log-cholesky
+# parameterization of U and V
+get_neg_loglik <- function(Y, chol_U, diag_U, chol_V, diag_V) {
+  
+  n <- nrow(Y)
+  U <- get_mat_from_log_chol(chol_U, diag_U)
+  V <- get_mat_from_log_chol(chol_V, diag_V)
+  Sigma <- kronecker(U, V)
+  diag(Sigma) <- diag(Sigma) + 1
+  chol_Sigma <- chol(Sigma)
+  Sigma_inv <- chol2inv(chol_Sigma)
+  logdet_Sigma <- 2 * sum(log(diag(chol_Sigma)))
+  quad_form <- sum((Y %*% Sigma_inv) * Y)
+  neg_loglik <- 0.5 * (n * logdet_Sigma + quad_form)
+  return(neg_loglik)
+  
+}
+
+# slice parameters and send them to log-likelihood function
+get_neg_loglik_full_par <- function(Y, p1, p2, par) {
+  
+  n_chol_U <- get_n_chol_idx(p1)
+  chol_U <- par[1:n_chol_U]
+  diag_U <- par[(n_chol_U + 1):(n_chol_U + p1)]
+  n_chol_V <- get_n_chol_idx(p2)
+  chol_V <- par[(n_chol_U + p1 + 1):(n_chol_U + p1 + n_chol_V)]
+  diag_V <- par[(n_chol_U + p1 + n_chol_V + 1):(n_chol_U + p1 + n_chol_V + p2)]
+  get_neg_loglik(Y, chol_U, diag_U, chol_V, diag_V)
+  
+}
+
+# helper function to get optimization result
+get_Sigma_from_par <- function(p1, p2, par) {
+  
+  n_chol_U <- get_n_chol_idx(p1)
+  chol_U <- par[1:n_chol_U]
+  diag_U <- par[(n_chol_U + 1):(n_chol_U + p1)]
+  n_chol_V <- get_n_chol_idx(p2)
+  chol_V <- par[(n_chol_U + p1 + 1):(n_chol_U + p1 + n_chol_V)]
+  diag_V <- par[(n_chol_U + p1 + n_chol_V + 1):(n_chol_U + p1 + n_chol_V + p2)]
+  U <- get_mat_from_log_chol(chol_U, diag_U)
+  V <- get_mat_from_log_chol(chol_V, diag_V)
+  Sigma <- kronecker(U, V)
+  return(Sigma)
+  
+}
+```
+
+```{r}
+get_B_given_C <- function(A, B, C) {
+  
+  n2 <- ncol(C)
+  m2 <- nrow(C)
+  
+  for (i in 1:nrow(B)) {
+    
+    for (j in 1:ncol(B)) {
+      
+      A_ij <- A[
+        ((i - 1) * m2 + 1):(i * m2),
+        ((j - 1) * n2 + 1):(j * n2)
+      ]
+      B[i, j] <- sum(A_ij * C)
+      
+    }
+    
+  }
+  
+  B <- (1 / sum(C ^ 2)) * B
+  return(B)
+  
+}
+
+get_C_given_B <- function(A, B, C) {
+  
+  n1 <- ncol(B)
+  m1 <- nrow(B)
+  n2 <- ncol(C)
+  m2 <- nrow(C)
+  
+  for (i in 1:nrow(C)) {
+    
+    for (j in 1:ncol(C)) {
+      
+      A_hat_ij <- A[
+        i + (0:(m1 - 1)) * m2,
+        j + (0:(n1 - 1)) * n2
+      ]
+      C[i, j] <- sum(A_hat_ij * B)
+      
+    }
+    
+  }
+  
+  C <- (1 / sum(B ^ 2)) * C
+  return(C)
+  
+}
+
+optimize_BC_alt_LS <- function(A, p1, p2, maxiter = 100, reltol = 1e-12) {
+  
+  B <- diag(p1)
+  C <- diag(p2)
+  old_obj <- norm(A - kronecker(B, C), type = "F")
+  obj <- old_obj
+  
+  for (k in 1:maxiter) {
+    
+    print(
+      glue::glue("Iteration {k - 1}: objective = {obj}")
+    )
+    B <- get_B_given_C(A, B, C)
+    C <- get_C_given_B(A, B, C)
+    
+    obj <- norm(A - kronecker(B, C), type = "F")
+    rel_improvement <- exp(log(old_obj - obj) - log(old_obj))
+    if (rel_improvement < reltol) {
+      
+      break
+      
+    } else {
+      
+      old_obj <- obj
+      
+    }
+    
+  }
+  
+  return(
+    list(
+      B = B,
+      C = C
+    )
+  )
+  
+}
+```
+
+## Experiments
+
+In all experiments below, I generate data from the model:
+
+$$\textrm{vec}(Y_{1}), \dots, \textrm{vec}(Y_{n}) \sim \mathcal{N}(0, I + \Sigma).$$
+Each matrix $Y_{i}$ will be $8 \times 8$. 
+
+First, I generated data where $\Sigma$ can be written as $\Sigma = R \otimes C$ (i.e. $\Sigma$ is separable).
+
+Here, I compare the results of optimizing $R$ and $C$ using both approaches above. Because $R$ and $C$ are identifiable only up to a scaling factor, I instead compare $\Sigma$ to $\hat{R} \otimes \hat{C}$, below, where $\hat{R}$ and $\hat{C}$ are estimates from the corresponding method:
+
+```{r}
+sim_data_separable <- function(n, p1, p2) {
+  
+  n_chol_U <- get_n_chol_idx(p1)
+  n_chol_V <- get_n_chol_idx(p2)
+  chol_U <- rnorm(n_chol_U, sd = 2/3)
+  chol_V <- rnorm(n_chol_V, sd = 2/3)
+  diag_U <- log(runif(p1, max = 1/5))
+  diag_V <- log(runif(p2, max = 1/5))
+  U <- get_mat_from_log_chol(chol_U, diag_U)
+  V <- get_mat_from_log_chol(chol_V, diag_V)
+  Sigma <- kronecker(U, V)
+  diag(Sigma) <- diag(Sigma) + 1
+  Y <- MASS::mvrnorm(
+    n = n, mu = rep(0, p1 * p2), Sigma = Sigma
+  )
+  diag(Sigma) <- diag(Sigma) - 1
+  
+  return(
+    list(
+      Y = Y,
+      Sigma = Sigma
+    )
+  )
+  
+}
+```
+
+```{r, results='hide'}
+set.seed(100)
+n <- 100
+p1 <- 8
+p2 <- 8
+dat <- sim_data_separable(n, p1, p2)
+
+n_par <- p1 + p2 + get_n_chol_idx(p1) + get_n_chol_idx(p2)
+par_init <- rep(0, n_par)
+
+opt_out <- optim(
+  par = par_init,
+  fn = get_neg_loglik_full_par,
+  Y = dat$Y,
+  p1 = p1, 
+  p2 = p2,
+  method = "L-BFGS-B",
+  control = list(maxit = 1e4)
+)
+
+Sigma_hat <- get_Sigma_from_par(p1, p2, opt_out$par)
+
+# empirical covariance
+A <- cov(dat$Y)
+diag(A) <- diag(A) - 1
+
+opt_out2 <- optimize_BC_alt_LS(A, p1, p2)
+Sigma_hat2 <- kronecker(opt_out2$B, opt_out2$C)
+```
+
+
+```{r}
+library(ggplot2)
+
+df <- data.frame(
+  true = as.vector(dat$Sigma),
+  frob = as.vector(Sigma_hat2),
+  mle = as.vector(Sigma_hat)
+)
+
+xmin <- min(df$true, df$frob, df$mle)
+xmax <- max(df$true, df$frob, df$mle)
+
+g1 <- ggplot(data = df, aes(x = true, y = frob)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("Frobenius Approx")
+
+g2 <- ggplot(data = df, aes(x = true, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("MLE")
+
+g3 <- ggplot(data = df, aes(x = frob, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("Frobenius Approx") +
+  ylab("MLE")
+
+library(ggpubr)
+ggarrange(g1, g2, g3, nrow = 2, ncol = 2)
+```
+```{r}
+frob_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(frob_df) <- c("row", "col")
+frob_df$cov <- as.vector(Sigma_hat2)
+frob_df$method <- "frob"
+
+mle_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(mle_df) <- c("row", "col")
+mle_df$cov <- as.vector(Sigma_hat)
+mle_df$method <- "mle"
+
+true_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(true_df) <- c("row", "col")
+true_df$cov <- as.vector(dat$Sigma)
+true_df$method <- "true"
+
+cov_df <- rbind(frob_df, mle_df, true_df)
+
+ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Use facet_wrap to create a separate plot for each method
+  facet_wrap(~ method) +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  scale_y_reverse() +
+  coord_fixed()
+```
+
+Generally, the estimates from the two methods look quite similar, and capture the true structure very well.
+
+Next, I generated data where $\Sigma = I$. Below are the results:
+
+```{r}
+sim_data_id_cov <- function(n, p1, p2) {
+  
+  Sigma <- diag(x = 2, nrow = p1 * p2, ncol = p1 * p2)
+  Y <- MASS::mvrnorm(
+    n = n, mu = rep(0, p1 * p2), Sigma = Sigma
+  )
+  
+  return(
+    list(
+      Y = Y,
+      Sigma = diag(p1*p2)
+    )
+  )
+  
+}
+```
+
+```{r, results='hide'}
+set.seed(100)
+n <- 100
+p1 <- 8
+p2 <- 8
+dat <- sim_data_id_cov(n, p1, p2)
+
+n_par <- p1 + p2 + get_n_chol_idx(p1) + get_n_chol_idx(p2)
+par_init <- rep(0, n_par)
+
+opt_out <- optim(
+  par = par_init,
+  fn = get_neg_loglik_full_par,
+  Y = dat$Y,
+  p1 = p1, 
+  p2 = p2,
+  method = "L-BFGS-B",
+  control = list(maxit = 1e4)
+)
+
+Sigma_hat <- get_Sigma_from_par(p1, p2, opt_out$par)
+
+# empirical covariance
+A <- cov(dat$Y)
+diag(A) <- diag(A) - 1
+
+opt_out2 <- optimize_BC_alt_LS(A, p1, p2)
+Sigma_hat2 <- kronecker(opt_out2$B, opt_out2$C)
+```
+```{r}
+library(ggplot2)
+
+df <- data.frame(
+  true = as.vector(dat$Sigma),
+  frob = as.vector(Sigma_hat2),
+  mle = as.vector(Sigma_hat)
+)
+
+xmin <- min(df$true, df$frob, df$mle)
+xmax <- max(df$true, df$frob, df$mle)
+
+g1 <- ggplot(data = df, aes(x = true, y = frob)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("Frobenius Approx")
+
+g2 <- ggplot(data = df, aes(x = true, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("MLE")
+
+g3 <- ggplot(data = df, aes(x = frob, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("Frobenius Approx") +
+  ylab("MLE")
+
+library(ggpubr)
+ggarrange(g1, g2, g3, nrow = 2, ncol = 2)
+```
+
+
+```{r}
+frob_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(frob_df) <- c("row", "col")
+frob_df$cov <- as.vector(Sigma_hat2)
+frob_df$method <- "frob"
+
+mle_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(mle_df) <- c("row", "col")
+mle_df$cov <- as.vector(Sigma_hat)
+mle_df$method <- "mle"
+
+true_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(true_df) <- c("row", "col")
+true_df$cov <- as.vector(dat$Sigma)
+true_df$method <- "true"
+
+cov_df <- rbind(frob_df, mle_df, true_df)
+
+ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Use facet_wrap to create a separate plot for each method
+  facet_wrap(~ method) +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  scale_y_reverse() +
+  coord_fixed()
+```
+
+The MLE and Frobenius methods are quite close to each other, and both do a fairly good job at capturing the true structure. However, you can see clear off diagonal artifacts of the separability constraints.
+
+Next, I simulate data where $\Sigma = \Lambda \Lambda^{T}$ where $\Lambda$ is rank 4. The results are below:
+
+```{r}
+sim_data_low_rank <- function(n, p1, p2, K = 4, sd = 0.5) {
+  
+  B <- matrix(
+    data = rnorm(p1 * p2 * K, sd = sd), nrow = p1 * p2, ncol = K
+  )
+  Sigma <- tcrossprod(B)
+
+  diag(Sigma) <- diag(Sigma) + 1
+  Y <- MASS::mvrnorm(
+    n = n, mu = rep(0, p1 * p2), Sigma = Sigma
+  )
+  diag(Sigma) <- diag(Sigma) - 1
+  
+  return(
+    list(
+      Y = Y,
+      Sigma = Sigma
+    )
+  )
+  
+}
+```
+
+```{r, results='hide'}
+set.seed(100)
+n <- 100
+p1 <- 8
+p2 <- 8
+dat <- sim_data_low_rank(n, p1, p2)
+
+n_par <- p1 + p2 + get_n_chol_idx(p1) + get_n_chol_idx(p2)
+par_init <- rep(0, n_par)
+
+opt_out <- optim(
+  par = par_init,
+  fn = get_neg_loglik_full_par,
+  Y = dat$Y,
+  p1 = p1, 
+  p2 = p2,
+  method = "L-BFGS-B",
+  control = list(maxit = 1e4)
+)
+
+Sigma_hat <- get_Sigma_from_par(p1, p2, opt_out$par)
+
+# empirical covariance
+A <- cov(dat$Y)
+diag(A) <- diag(A) - 1
+
+opt_out2 <- optimize_BC_alt_LS(A, p1, p2)
+Sigma_hat2 <- kronecker(opt_out2$B, opt_out2$C)
+```
+
+```{r}
+library(ggplot2)
+
+df <- data.frame(
+  true = as.vector(dat$Sigma),
+  frob = as.vector(Sigma_hat2),
+  mle = as.vector(Sigma_hat)
+)
+
+xmin <- min(df$true, df$frob, df$mle)
+xmax <- max(df$true, df$frob, df$mle)
+
+g1 <- ggplot(data = df, aes(x = true, y = frob)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("Frobenius Approx")
+
+g2 <- ggplot(data = df, aes(x = true, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("MLE")
+
+g3 <- ggplot(data = df, aes(x = frob, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("Frobenius Approx") +
+  ylab("MLE")
+
+library(ggpubr)
+ggarrange(g1, g2, g3, nrow = 2, ncol = 2)
+```
+
+
+```{r}
+frob_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(frob_df) <- c("row", "col")
+frob_df$cov <- as.vector(Sigma_hat2)
+frob_df$method <- "frob"
+
+mle_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(mle_df) <- c("row", "col")
+mle_df$cov <- as.vector(Sigma_hat)
+mle_df$method <- "mle"
+
+true_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(true_df) <- c("row", "col")
+true_df$cov <- as.vector(dat$Sigma)
+true_df$method <- "true"
+
+cov_df <- rbind(frob_df, mle_df, true_df)
+
+ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Use facet_wrap to create a separate plot for each method
+  facet_wrap(~ method) +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  scale_y_reverse() +
+  coord_fixed()
+```
+
+Here, there are some notable differences between the MLE and Frobenius methods. It seems like the Frobenius approach is better at capturing the off-diagonal covariance where the MLE approach is better at capturing the diagonal elements of the true covariance structure. 
+
+Next, I generated data from the same model as above, except I set $\Lambda$ to be full rank.
+
+```{r, results='hide'}
+set.seed(100)
+n <- 100
+p1 <- 8
+p2 <- 8
+dat <- sim_data_low_rank(n, p1, p2, p1*p2, (1/3))
+
+n_par <- p1 + p2 + get_n_chol_idx(p1) + get_n_chol_idx(p2)
+par_init <- rep(0, n_par)
+
+opt_out <- optim(
+  par = par_init,
+  fn = get_neg_loglik_full_par,
+  Y = dat$Y,
+  p1 = p1, 
+  p2 = p2,
+  method = "L-BFGS-B",
+  control = list(maxit = 1e4)
+)
+
+Sigma_hat <- get_Sigma_from_par(p1, p2, opt_out$par)
+
+# empirical covariance
+A <- cov(dat$Y)
+diag(A) <- diag(A) - 1
+
+opt_out2 <- optimize_BC_alt_LS(A, p1, p2)
+Sigma_hat2 <- kronecker(opt_out2$B, opt_out2$C)
+```
+```{r}
+library(ggplot2)
+
+df <- data.frame(
+  true = as.vector(dat$Sigma),
+  frob = as.vector(Sigma_hat2),
+  mle = as.vector(Sigma_hat)
+)
+
+xmin <- min(df$true, df$frob, df$mle)
+xmax <- max(df$true, df$frob, df$mle)
+
+g1 <- ggplot(data = df, aes(x = true, y = frob)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("Frobenius Approx")
+
+g2 <- ggplot(data = df, aes(x = true, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("MLE")
+
+g3 <- ggplot(data = df, aes(x = frob, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("Frobenius Approx") +
+  ylab("MLE")
+
+library(ggpubr)
+ggarrange(g1, g2, g3, nrow = 2, ncol = 2)
+```
+
+
+```{r}
+frob_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(frob_df) <- c("row", "col")
+frob_df$cov <- as.vector(Sigma_hat2)
+frob_df$method <- "frob"
+
+mle_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(mle_df) <- c("row", "col")
+mle_df$cov <- as.vector(Sigma_hat)
+mle_df$method <- "mle"
+
+true_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(true_df) <- c("row", "col")
+true_df$cov <- as.vector(dat$Sigma)
+true_df$method <- "true"
+
+cov_df <- rbind(frob_df, mle_df, true_df)
+
+ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Use facet_wrap to create a separate plot for each method
+  facet_wrap(~ method) +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  scale_y_reverse() +
+  coord_fixed()
+```
+
+Both the Frobenius and MLE methods essentially just capture the diagonal of the true covariance matrix. Not much of the off-diagonal structure is captured.
+
+Finally, I simulated $\Sigma = I + S$, where $S$ is a sparse matrix with non-negative entries. The results are below:
+
+```{r}
+sim_data_sparse <- function(n, p1, p2, 
+                            sparsity = 0.8, 
+                            min_val = 0.01, 
+                            max_val = 0.1, 
+                            diag_pad = 1) {
+  # n:       number of samples
+  # p1,p2:   dimensions you want to "flatten" into p = p1 * p2
+  # sparsity: fraction of off-diagonal entries to keep at zero
+  # min_val, max_val: range for strictly positive off-diagonal values
+  # diag_pad: amount to add to diagonal to help ensure positive-definiteness
+  
+  p <- p1 * p2
+  
+  # Start with an identity matrix
+  Sigma <- diag(p)
+  
+  # All off-diagonal pairs (i, j), i < j
+  off_diag_pairs <- combn(p, 2)
+  n_pairs <- ncol(off_diag_pairs)
+  
+  # Number of pairs to fill
+  n_to_fill <- round((1 - sparsity) * n_pairs)
+  
+  # Randomly choose which off-diagonal pairs get filled
+  fill_idx <- sample(n_pairs, n_to_fill, replace = FALSE)
+  
+  # Generate strictly positive values
+  fill_vals <- runif(n_to_fill, min = min_val, max = max_val)
+  
+  # Fill those pairs symmetrically
+  for (k in seq_along(fill_idx)) {
+    i <- off_diag_pairs[1, fill_idx[k]]
+    j <- off_diag_pairs[2, fill_idx[k]]
+    val <- fill_vals[k]
+    Sigma[i, j] <- val
+    Sigma[j, i] <- val
+  }
+  
+  # Optionally add a buffer to the diagonal to promote positive-definiteness
+  diag(Sigma) <- diag(Sigma) + diag_pad
+  
+  # Now draw samples from multivariate normal with mean=0
+  Y <- MASS::mvrnorm(n, mu = rep(0, p), Sigma = Sigma)
+  diag(Sigma) <- diag(Sigma) - 1
+  
+  # Return the data and the covariance matrix
+  list(Y = Y, Sigma = Sigma)
+}
+```
+
+
+```{r, results='hide'}
+set.seed(100)
+n <- 100
+p1 <- 8
+p2 <- 8
+dat <- sim_data_sparse(n, p1, p2, diag_pad = 1, max_val = 0.75, sparsity = 0.95)
+
+n_par <- p1 + p2 + get_n_chol_idx(p1) + get_n_chol_idx(p2)
+par_init <- rep(0, n_par)
+
+opt_out <- optim(
+  par = par_init,
+  fn = get_neg_loglik_full_par,
+  Y = dat$Y,
+  p1 = p1, 
+  p2 = p2,
+  method = "L-BFGS-B",
+  control = list(maxit = 1e4)
+)
+
+Sigma_hat <- get_Sigma_from_par(p1, p2, opt_out$par)
+
+# empirical covariance
+A <- cov(dat$Y)
+diag(A) <- diag(A) - 1
+
+opt_out2 <- optimize_BC_alt_LS(A, p1, p2)
+Sigma_hat2 <- kronecker(opt_out2$B, opt_out2$C)
+```
+
+```{r}
+library(ggplot2)
+
+df <- data.frame(
+  true = as.vector(dat$Sigma),
+  frob = as.vector(Sigma_hat2),
+  mle = as.vector(Sigma_hat)
+)
+
+xmin <- min(df$true, df$frob, df$mle)
+xmax <- max(df$true, df$frob, df$mle)
+
+g1 <- ggplot(data = df, aes(x = true, y = frob)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("Frobenius Approx")
+
+g2 <- ggplot(data = df, aes(x = true, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("True") +
+  ylab("MLE")
+
+g3 <- ggplot(data = df, aes(x = frob, y = mle)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  xlim(xmin, xmax) +
+  ylim(xmin, xmax) +
+  coord_fixed() +
+  xlab("Frobenius Approx") +
+  ylab("MLE")
+
+library(ggpubr)
+ggarrange(g1, g2, g3, nrow = 2, ncol = 2)
+```
+
+
+```{r}
+frob_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(frob_df) <- c("row", "col")
+frob_df$cov <- as.vector(Sigma_hat2)
+frob_df$method <- "frob"
+
+mle_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(mle_df) <- c("row", "col")
+mle_df$cov <- as.vector(Sigma_hat)
+mle_df$method <- "mle"
+
+true_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
+colnames(true_df) <- c("row", "col")
+true_df$cov <- as.vector(dat$Sigma)
+true_df$method <- "true"
+
+cov_df <- rbind(frob_df, mle_df, true_df)
+
+ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Use facet_wrap to create a separate plot for each method
+  facet_wrap(~ method) +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = "blue",
+    mid = "white",
+    high = "red",
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  scale_y_reverse() +
+  coord_fixed()
+```
+
+Again, both methods here are basically just capturing the diagonal of the true covariance matrix.
+
+## Conclusion
+
+Overall, the MLE and Frobenius methods look quite similar in these simple simulations. The low-rank covariance experiment showed some noticeable differences, but nothing too horrible. It would be interesting to see how closely these approaches align with real data.
