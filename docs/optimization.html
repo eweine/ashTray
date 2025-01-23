@@ -439,10 +439,10 @@ changes </a>
 <div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R
-Markdown file created these results, you’ll want to first commit it to
-the Git repo. If you’re still working on the analysis, you can ignore
-this warning. When you’re finished, you can run
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
 <code>wflow_publish</code> to commit the R Markdown file and build the
 HTML.</p>
 </div>
@@ -535,15 +535,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytreed8bff096d4e04e4277cbdd76d4a58993dfcdf8detargetblankd8bff09a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytreef17d4f150f6c7621f719ba9c3ae1fa0bc013d4d5targetblankf17d4f1a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/eweine/ashTray/tree/d8bff096d4e04e4277cbdd76d4a58993dfcdf8de" target="_blank">d8bff09</a>
+<a href="https://github.com/eweine/ashTray/tree/f17d4f150f6c7621f719ba9c3ae1fa0bc013d4d5" target="_blank">f17d4f1</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytreed8bff096d4e04e4277cbdd76d4a58993dfcdf8detargetblankd8bff09a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytreef17d4f150f6c7621f719ba9c3ae1fa0bc013d4d5targetblankf17d4f1a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -553,7 +553,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/eweine/ashTray/tree/d8bff096d4e04e4277cbdd76d4a58993dfcdf8de" target="_blank">d8bff09</a>.
+<a href="https://github.com/eweine/ashTray/tree/f17d4f150f6c7621f719ba9c3ae1fa0bc013d4d5" target="_blank">f17d4f1</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -567,8 +567,8 @@ depends on. Below is the status of the Git repository when the results
 were generated:
 </p>
 <pre><code>
-Untracked files:
-    Untracked:  analysis/optimization.Rmd
+Unstaged changes:
+    Modified:   analysis/optimization.Rmd
 
 </code></pre>
 <p>
@@ -583,10 +583,74 @@ have uncommitted changes.
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with
-<code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/optimization.Rmd</code>) and HTML
+(<code>docs/optimization.html</code>) files. If you’ve configured a
+remote Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/analysis/optimization.Rmd" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+<td>
+added optimization experiments
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/eweine/ashTray/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/optimization.html" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+<td>
+added optimization experiments
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -770,11 +834,15 @@ optimize_BC_alt_LS &lt;- function(A, p1, p2, maxiter = 100, reltol = 1e-12) {
 <p><span class="math display">\[\textrm{vec}(Y_{1}), \dots,
 \textrm{vec}(Y_{n}) \sim \mathcal{N}(0, I + \Sigma).\]</span> Each
 matrix <span class="math inline">\(Y_{i}\)</span> will be <span
-class="math inline">\(8 \times 8\)</span>.</p>
+class="math inline">\(64 \times 64\)</span>.</p>
 <p>First, I generated data where <span
 class="math inline">\(\Sigma\)</span> can be written as <span
 class="math inline">\(\Sigma = R \otimes C\)</span> (i.e. <span
-class="math inline">\(\Sigma\)</span> is separable).</p>
+class="math inline">\(\Sigma\)</span> is separable). Both <span
+class="math inline">\(R\)</span> and <span
+class="math inline">\(C\)</span> are <span class="math inline">\(8
+\times 8\)</span> in the simulation and are set to be <span
+class="math inline">\(8 \times 8\)</span> in all experiments below:</p>
 <p>Here, I compare the results of optimizing <span
 class="math inline">\(R\)</span> and <span
 class="math inline">\(C\)</span> using both approaches above. Because
@@ -878,6 +946,43 @@ g3 &lt;- ggplot(data = df, aes(x = frob, y = mle)) +
 library(ggpubr)
 ggarrange(g1, g2, g3, nrow = 2, ncol = 2)</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-5-1">
+Past versions of unnamed-chunk-5-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-5-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-5-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>frob_df &lt;- expand.grid(1:(p1 * p2), 1:(p1 * p2))
 colnames(frob_df) &lt;- c(&quot;row&quot;, &quot;col&quot;)
 frob_df$cov &lt;- as.vector(Sigma_hat2)
@@ -910,6 +1015,43 @@ ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
   scale_y_reverse() +
   coord_fixed()</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-6-1">
+Past versions of unnamed-chunk-6-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-6-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-6-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Generally, the estimates from the two methods look quite similar, and
 capture the true structure very well.</p>
 <p>Next, I generated data where <span class="math inline">\(\Sigma =
@@ -997,6 +1139,43 @@ g3 &lt;- ggplot(data = df, aes(x = frob, y = mle)) +
 library(ggpubr)
 ggarrange(g1, g2, g3, nrow = 2, ncol = 2)</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-9-1">
+Past versions of unnamed-chunk-9-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-9-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-9-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>frob_df &lt;- expand.grid(1:(p1 * p2), 1:(p1 * p2))
 colnames(frob_df) &lt;- c(&quot;row&quot;, &quot;col&quot;)
 frob_df$cov &lt;- as.vector(Sigma_hat2)
@@ -1029,6 +1208,43 @@ ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
   scale_y_reverse() +
   coord_fixed()</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-10-1">
+Past versions of unnamed-chunk-10-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-10-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-10-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>The MLE and Frobenius methods are quite close to each other, and both
 do a fairly good job at capturing the true structure. However, you can
 see clear off diagonal artifacts of the separability constraints.</p>
@@ -1125,6 +1341,43 @@ g3 &lt;- ggplot(data = df, aes(x = frob, y = mle)) +
 library(ggpubr)
 ggarrange(g1, g2, g3, nrow = 2, ncol = 2)</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-13-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>frob_df &lt;- expand.grid(1:(p1 * p2), 1:(p1 * p2))
 colnames(frob_df) &lt;- c(&quot;row&quot;, &quot;col&quot;)
 frob_df$cov &lt;- as.vector(Sigma_hat2)
@@ -1157,6 +1410,43 @@ ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
   scale_y_reverse() +
   coord_fixed()</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-14-1">
+Past versions of unnamed-chunk-14-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-14-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-14-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Here, there are some notable differences between the MLE and
 Frobenius methods. It seems like the Frobenius approach is better at
 capturing the off-diagonal covariance where the MLE approach is better
@@ -1231,6 +1521,43 @@ g3 &lt;- ggplot(data = df, aes(x = frob, y = mle)) +
 library(ggpubr)
 ggarrange(g1, g2, g3, nrow = 2, ncol = 2)</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-16-1">
+Past versions of unnamed-chunk-16-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-16-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-16-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>frob_df &lt;- expand.grid(1:(p1 * p2), 1:(p1 * p2))
 colnames(frob_df) &lt;- c(&quot;row&quot;, &quot;col&quot;)
 frob_df$cov &lt;- as.vector(Sigma_hat2)
@@ -1263,6 +1590,43 @@ ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
   scale_y_reverse() +
   coord_fixed()</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-17-1">
+Past versions of unnamed-chunk-17-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-17-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-17-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Both the Frobenius and MLE methods essentially just capture the
 diagonal of the true covariance matrix. Not much of the off-diagonal
 structure is captured.</p>
@@ -1385,6 +1749,43 @@ g3 &lt;- ggplot(data = df, aes(x = frob, y = mle)) +
 library(ggpubr)
 ggarrange(g1, g2, g3, nrow = 2, ncol = 2)</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-20-1">
+Past versions of unnamed-chunk-20-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-20-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-20-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>frob_df &lt;- expand.grid(1:(p1 * p2), 1:(p1 * p2))
 colnames(frob_df) &lt;- c(&quot;row&quot;, &quot;col&quot;)
 frob_df$cov &lt;- as.vector(Sigma_hat2)
@@ -1417,6 +1818,43 @@ ggplot(cov_df, aes(x = col, y = row, fill = cov)) +
   scale_y_reverse() +
   coord_fixed()</code></pre>
 <p><img src="figure/optimization.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-21-1">
+Past versions of unnamed-chunk-21-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-21-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/d8c03982fcbce9abca36ceb56c2e3465de06e3be/docs/figure/optimization.Rmd/unnamed-chunk-21-1.png" target="_blank">d8c0398</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-01-23
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Again, both methods here are basically just capturing the diagonal of
 the true covariance matrix.</p>
 </div>
@@ -1460,19 +1898,19 @@ loaded via a namespace (and not attached):
  [1] sass_0.4.9        utf8_1.2.4        generics_0.1.3    tidyr_1.3.1      
  [5] rstatix_0.7.2     stringi_1.8.4     digest_0.6.36     magrittr_2.0.3   
  [9] evaluate_0.24.0   grid_4.4.0        fastmap_1.2.0     rprojroot_2.0.4  
-[13] workflowr_1.7.1   jsonlite_1.8.8    backports_1.5.0   promises_1.3.0   
-[17] purrr_1.0.2       fansi_1.0.6       scales_1.3.0      jquerylib_0.1.4  
-[21] abind_1.4-5       cli_3.6.3         rlang_1.1.4       crayon_1.5.3     
-[25] cowplot_1.1.3     munsell_0.5.1     withr_3.0.0       cachem_1.1.0     
-[29] yaml_2.3.8        tools_4.4.0       ggsignif_0.6.4    dplyr_1.1.4      
-[33] colorspace_2.1-0  httpuv_1.6.15     broom_1.0.6       vctrs_0.6.5      
-[37] R6_2.5.1          lifecycle_1.0.4   git2r_0.33.0      stringr_1.5.1    
-[41] fs_1.6.4          car_3.1-2         MASS_7.3-61       pkgconfig_2.0.3  
-[45] pillar_1.9.0      bslib_0.7.0       later_1.3.2       gtable_0.3.5     
-[49] glue_1.7.0        Rcpp_1.0.13       highr_0.11        xfun_0.45        
-[53] tibble_3.2.1      tidyselect_1.2.1  rstudioapi_0.16.0 knitr_1.47       
-[57] farver_2.1.2      htmltools_0.5.8.1 labeling_0.4.3    carData_3.0-5    
-[61] rmarkdown_2.27    compiler_4.4.0   </code></pre>
+[13] workflowr_1.7.1   jsonlite_1.8.8    whisker_0.4.1     backports_1.5.0  
+[17] promises_1.3.0    purrr_1.0.2       fansi_1.0.6       scales_1.3.0     
+[21] jquerylib_0.1.4   abind_1.4-5       cli_3.6.3         rlang_1.1.4      
+[25] crayon_1.5.3      cowplot_1.1.3     munsell_0.5.1     withr_3.0.0      
+[29] cachem_1.1.0      yaml_2.3.8        tools_4.4.0       ggsignif_0.6.4   
+[33] dplyr_1.1.4       colorspace_2.1-0  httpuv_1.6.15     broom_1.0.6      
+[37] vctrs_0.6.5       R6_2.5.1          lifecycle_1.0.4   git2r_0.33.0     
+[41] stringr_1.5.1     car_3.1-2         fs_1.6.4          MASS_7.3-61      
+[45] pkgconfig_2.0.3   pillar_1.9.0      bslib_0.7.0       later_1.3.2      
+[49] gtable_0.3.5      glue_1.7.0        Rcpp_1.0.13       highr_0.11       
+[53] xfun_0.45         tibble_3.2.1      tidyselect_1.2.1  rstudioapi_0.16.0
+[57] knitr_1.47        farver_2.1.2      htmltools_0.5.8.1 labeling_0.4.3   
+[61] carData_3.0-5     rmarkdown_2.27    compiler_4.4.0   </code></pre>
 </div>
 </div>
 
