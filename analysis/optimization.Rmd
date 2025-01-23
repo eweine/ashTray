@@ -179,7 +179,7 @@ optimize_BC_alt_LS <- function(A, p1, p2, maxiter = 100, reltol = 1e-12) {
 In all experiments below, I generate data from the model:
 
 $$\textrm{vec}(Y_{1}), \dots, \textrm{vec}(Y_{n}) \sim \mathcal{N}(0, I + \Sigma).$$
-Each matrix $Y_{i}$ will be $64 \times 64$. 
+Each matrix $Y_{i}$ will be $64 \times 64$ and I set $n = 100$
 
 First, I generated data where $\Sigma$ can be written as $\Sigma = R \otimes C$ (i.e. $\Sigma$ is separable). Both $R$ and $C$ are $8 \times 8$ in the simulation and are set to be $8 \times 8$ in all experiments below:
 
