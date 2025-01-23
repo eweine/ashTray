@@ -9,3 +9,8 @@ editor_options:
 ---
 
 Welcome to my research website.
+
+## Simulations
+
+[Single Mixture Component](optimization.html)
+
