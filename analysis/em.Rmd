@@ -1,0 +1,320 @@
+---
+title: "An EM Algorithm for Separable Mixtures"
+output: workflowr::wflow_html
+date: "2025-01-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r, results='hide'}
+# I want to start to think about how to write an (approximate) EM algorithm for
+# the mixture of separable normals case. I think that the approximate step
+# should involve taking the TED of the sample covariance. 
+
+ted <- function (S, minval = 0, r = nrow(S)) {
+  n <- nrow(S)
+  r <- min(r,n)
+  out <- eigen(S)
+  d <- out$values
+  d <- pmax(d-1,minval)
+  if (r < n)
+    d[seq(r+1,n)] <- minval
+  return(tcrossprod(out$vectors %*% diag(sqrt(d))))
+}
+
+# Get the loglik of the model Y ~ N(0, I + R \kron C)
+get_sep_loglik_per_pt <- function(Y, R, C) {
+  
+  Sigma <- kronecker(R, C)
+  diag(Sigma) <- diag(Sigma) + 1
+  chol_Sigma <- chol(Sigma)
+  Sigma_inv <- chol2inv(chol_Sigma)
+  half_logdet_Sigma <- sum(log(diag(chol_Sigma)))
+  quad_form <- rowSums((Y %*% Sigma_inv) * Y)
+  loglik <- -0.5 * quad_form - half_logdet_Sigma
+  return(loglik)
+  
+}
+
+get_null_loglik_per_pt <- function(Y) {
+  
+  -0.5 * rowSums(Y ^ 2)
+  
+}
+
+# get responsibilities given mixture weights and components
+# by default, make the last mixture weight correspond to the null
+get_responsibilities <- function(Y, R_list, C_list, Pi) {
+  
+  K <- length(Pi)
+  omega <- matrix(
+    data = 0,
+    nrow = nrow(Y),
+    ncol = K
+  )
+  
+  for (k in 1:(K - 1)) {
+    
+    omega[, k] <- Pi[k] * exp(
+      get_sep_loglik_per_pt(Y, R_list[[k]], C_list[[k]])
+    ) 
+    
+  }
+  
+  omega[, K] <- Pi[K] * exp(get_null_loglik_per_pt(Y))
+  omega <- omega / rowSums(omega)
+  
+  return(omega)
+  
+}
+
+# input vector of responsibilties
+update_Pi <- function(omega) {
+  
+  return(
+    colMeans(omega)
+  )
+  
+}
+
+get_S_list <- function(Y, omega) {
+  
+  K <- ncol(omega)
+  S_list <- list()
+  Y_T <- t(Y)
+  
+  for (k in 1:(K - 1)) {
+    
+    # compute t(Y) %*% diag(omega[,k]) %*% Y
+    S_k <- crossprod(sqrt(omega[,k]) * Y) / sum(omega[,k])
+    S_list[[k]] <- ted(S_k)
+    
+  }
+  
+  return(S_list)
+  
+}
+
+get_R_given_C <- function(S, R, C) {
+  
+  n2 <- ncol(C)
+  m2 <- nrow(C)
+  
+  # Only iterate over the upper triangle, including diagonal
+  for (i in 1:nrow(R)) {
+    for (j in i:ncol(R)) {
+      
+      S_ij <- S[
+        ((i - 1) * m2 + 1):(i * m2),
+        ((j - 1) * n2 + 1):(j * n2)
+      ]
+      
+      # Compute once...
+      val <- sum(S_ij * C)
+      
+      # ...and assign to both [i, j] and [j, i]
+      R[i, j] <- val
+      R[j, i] <- val
+    }
+  }
+  
+  # Scale by sum(C^2)
+  R <- R / sum(C^2)
+  return(R)
+}
+
+get_C_given_R <- function(S, R, C) {
+  
+  n1 <- ncol(R)
+  m1 <- nrow(R)
+  n2 <- ncol(C)
+  m2 <- nrow(C)
+  
+  # Only iterate over the upper triangle, including diagonal
+  for (i in 1:nrow(C)) {
+    for (j in i:ncol(C)) {
+      
+      # Extract the sub-block of A relevant to (i,j)
+      S_hat_ij <- S[
+        i + (0:(m1 - 1)) * m2,
+        j + (0:(n1 - 1)) * n2
+      ]
+      
+      val <- sum(S_hat_ij * R)
+      
+      # Assign symmetrically
+      C[i, j] <- val
+      C[j, i] <- val
+    }
+  }
+  
+  # Scale by sum(R^2)
+  C <- C / sum(R^2)
+  return(C)
+}
+
+
+optimize_RC_alt_LS <- function(S, R_start, C_start, maxiter = 100, reltol = 1e-12) {
+  
+  R <- R_start
+  C <- C_start
+  old_obj <- norm(S - kronecker(R, C), type = "F")
+  obj <- old_obj
+  
+  for (k in 1:maxiter) {
+    
+    print(
+      glue::glue("Iteration {k - 1}: objective = {obj}")
+    )
+    R <- get_R_given_C(S, R, C)
+    C <- get_C_given_R(S, R, C)
+    
+    obj <- norm(S - kronecker(R, C), type = "F")
+    rel_improvement <- (old_obj - obj) / old_obj
+    if (rel_improvement < reltol) {
+      
+      break
+      
+    } else {
+      
+      old_obj <- obj
+      
+    }
+    
+  }
+  
+  return(
+    list(
+      R = R,
+      C = C
+    )
+  )
+  
+}
+
+loglik_em <- function(Y, R_list, C_list, Pi) {
+  
+  K <- length(Pi)
+  lik_mat <- matrix(
+    data = 0,
+    nrow = nrow(Y),
+    ncol = K
+  )
+  
+  for (k in 1:(K - 1)) {
+    
+    lik_mat[, k] <- Pi[k] * exp(
+      get_sep_loglik_per_pt(Y, R_list[[k]], C_list[[k]])
+    ) 
+    
+  }
+  
+  lik_mat[, K] <- Pi[K] * exp(get_null_loglik_per_pt(Y))
+  ll <- sum(log(rowSums(lik_mat)))
+  return(ll)
+  
+}
+
+# presumably will need other tolerance parameters here
+# a two component mixture contains one null and one non null
+optim_em <- function(Y, p1, p2, K, maxiter = 100) {
+  
+  # initialize parameters
+  Pi <- rep(1 / K, K)
+  R_list <- list()
+  C_list <- list()
+  
+  for (k in 1:(K - 1)) {
+    
+    R_list[[k]] <- diag(p1)
+    C_list[[k]] <- diag(p2)
+    
+  }
+  
+  loglik_vec <- c()
+  loglik <- loglik_em(Y, R_list, C_list, Pi)
+  loglik_vec <- c(loglik_vec, loglik)
+  
+  for (i in 1:maxiter) {
+    
+    responsibilities <- get_responsibilities(Y, R_list, C_list, Pi)
+    Pi <- update_Pi(responsibilities)
+    # weighted empirical covariance matrices
+    S_list <- get_S_list(Y, responsibilities)
+    
+    # find closest separable covariance matrix for each mixture component
+    for (k in 1:(K - 1)) {
+      
+      opt_RC <- optimize_RC_alt_LS(S_list[[k]], R_list[[k]], C_list[[k]])
+      R_list[[k]] <- opt_RC$R
+      C_list[[k]] <- opt_RC$C
+      
+    }
+    
+    loglik <- loglik_em(Y, R_list, C_list, Pi)
+    loglik_vec <- c(loglik_vec, loglik)
+    
+  }
+  
+  return(
+    list(
+      Pi = Pi,
+      R_list = R_list,
+      C_list = C_list,
+      loglik = loglik_vec
+    )
+  )
+  
+}
+
+# I think that the first thing to try is to generate data from a mixture 
+# of a point mass at 0 and a separable covariance structure
+library(matrixsampling)
+
+# s controls the portion of sparsity
+generate_point_normal_sim <- function(n, p1, p2, s = 0.5) {
+  
+  R <- rwishart(n = 1, nu = 1, Sigma = diag(p1))[,,1]
+  C <- rwishart(n = 1, nu = 1, Sigma = diag(p2))[,,1]
+  Sigma <- kronecker(R, C)
+  diag(Sigma) <- diag(Sigma) + 1
+  
+  n_zero <- rbinom(1, n, s)
+  n_nz <- n - n_zero
+  
+  Y_zero <- MASS::mvrnorm(
+    n = n_zero, mu = rep(0, p1 * p2), Sigma = diag(p1 * p2)
+  )
+  Y_nz <- MASS::mvrnorm(
+    n = n_nz, mu = rep(0, p1 * p2), Sigma = Sigma
+  )
+  Y <- rbind(Y_zero, Y_nz)
+  
+  diag(Sigma) <- diag(Sigma) - 1
+  
+  return(
+   list(
+     Y = Y,
+     pct_0 = n_zero / n,
+     Sigma = Sigma
+   ) 
+  )
+  
+}
+
+set.seed(489)
+n <- 250
+p1 <- 10
+p2 <- 10
+s <- 0.5
+dat <- generate_point_normal_sim(n, p1, p2, s)
+opt_out <- optim_em(dat$Y, p1, p2, 2, 100)
+
+Sigma_out <- kronecker(opt_out$R_list[[1]], opt_out$C_list[[1]])
+
+plot(opt_out$loglik)
+plot(as.vector(Sigma_out), as.vector(dat$Sigma))
+```
+

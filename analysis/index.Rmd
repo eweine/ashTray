@@ -14,3 +14,5 @@ Welcome to my research website.
 
 [Single Mixture Component](optimization.html)
 
+[EM Algorithm](em.html)
+
