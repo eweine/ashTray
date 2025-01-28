@@ -286,6 +286,7 @@ g3 <- ggplot(data = df, aes(x = frob, y = mle)) +
 library(ggpubr)
 ggarrange(g1, g2, g3, nrow = 2, ncol = 2)
 ```
+
 ```{r}
 frob_df <- expand.grid(1:(p1 * p2), 1:(p1 * p2))
 colnames(frob_df) <- c("row", "col")
