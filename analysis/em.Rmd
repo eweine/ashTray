@@ -8,6 +8,57 @@ date: "2025-01-27"
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
+```{r}
+reticulate::use_condaenv("glmm")
+```
+
+```{python}
+import torch
+
+def get_em_weighted_neg_loglik(Y, omega, p1, p2, chol_p1, chol_p2, par):
+
+    #print("got here")
+    L_U = torch.zeros((p1, p1), dtype=torch.float64)
+    indices_U = torch.tril_indices(p1, p1)
+    L_U[indices_U[0], indices_U[1]] = par[0:chol_p1]
+    #print("L_U")
+    U = L_U @ L_U.T
+
+    L_V = torch.zeros((p2, p2), dtype=torch.float64)
+    indices_V = torch.tril_indices(p2, p2)
+    L_V[indices_V[0], indices_V[1]] = par[chol_p1:(chol_p1 + chol_p2)]
+    V = L_V @ L_V.T
+
+    Sigma = torch.kron(U, V) + torch.eye(p1 * p2)
+    Sigma_chol = torch.linalg.cholesky(Sigma)
+    half_logdetSigma = torch.sum(torch.log(Sigma_chol.diag()))
+    quad_form = torch.sum(Y @ torch.cholesky_inverse(Sigma_chol) * Y, dim=1)
+
+    neg_log_lik = torch.sum(omega) * half_logdetSigma + 0.5 * torch.dot(omega, quad_form)
+    return neg_log_lik
+  
+def get_grad_em_weighted_ll_py(Y, omega, p1, p2, chol_p1, chol_p2, par):
+  
+    par = torch.tensor(par, dtype=torch.float64, requires_grad=True)
+    ll = get_em_weighted_neg_loglik(Y, omega, p1, p2, chol_p1, chol_p2, par)
+    ll.backward()
+    return(par.grad.numpy())
+  
+def get_ll_em_weighted_ll_py(Y, omega, p1, p2, chol_p1, chol_p2, par):
+  
+    par = torch.tensor(par, dtype=torch.float64)
+    ll = get_em_weighted_neg_loglik(Y, omega, p1, p2, chol_p1, chol_p2, par)
+    return(ll.numpy())
+```
+
+```{r}
+library(reticulate)
+```
+
+```{r}
+trch <- import("torch")
+```
+
 ```{r, results='hide'}
 # I want to start to think about how to write an (approximate) EM algorithm for
 # the mixture of separable normals case. I think that the approximate step
@@ -316,5 +367,70 @@ Sigma_out <- kronecker(opt_out$R_list[[1]], opt_out$C_list[[1]])
 
 plot(opt_out$loglik)
 plot(as.vector(Sigma_out), as.vector(dat$Sigma))
+```
+
+```{r}
+chol_R <- t(chol(opt_out$R_list[[1]]))
+chol_C <- t(chol(opt_out$C_list[[1]]))
+
+get_py_lower <- function(M) {
+  
+  p1 <- nrow(M)
+
+  # Get array indices for the lower triangle (including diagonal)
+  # 'arr.ind=TRUE' returns a two-column matrix of (row, col) pairs
+  idx <- which(lower.tri(M, diag=TRUE), arr.ind=TRUE)
+  
+  # Sort by row first, then by column
+  idx <- idx[order(idx[, 1], idx[, 2]), ]
+  
+  # Extract the entries in row-major order
+  par <- M[cbind(idx[, 1], idx[, 2])]
+  return(par)
+  
+}
+
+lower_R <- get_py_lower(chol_R)
+lower_C <- get_py_lower(chol_C)
+
+par_vals <- c(
+  lower_R, lower_C
+  )
+
+ll_R <- function(p) {
+  
+  py$get_ll_em_weighted_ll_py(
+    Y=trch$tensor(dat$Y, dtype=trch$float64),
+    omega=trch$tensor(runif(nrow(dat$Y)), dtype=trch$float64), 
+    p1=as.integer(p1), 
+    p2=as.integer(p2), 
+    chol_p1=length(lower_R), 
+    chol_p2=length(lower_C), 
+    par=p
+  )
+  
+}
+
+grad_R <- function(p) {
+  
+  py$get_grad_em_weighted_ll_py(
+    Y=trch$tensor(dat$Y, dtype=trch$float64),
+    omega=trch$tensor(runif(nrow(dat$Y)), dtype=trch$float64), 
+    p1=as.integer(p1), 
+    p2=as.integer(p2), 
+    chol_p1=length(lower_R), 
+    chol_p2=length(lower_C), 
+    par=p
+  )
+
+  
+}
+
+ng <- optim(
+  fn = ll_R,
+  gr = grad_R,
+  par = par_vals,
+  method = "BFGS"
+)
 ```
 
