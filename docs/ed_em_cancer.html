@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2025-01-27" />
+
+<title>Fitting a Separable Mixture to a Cancer Cell Line Dataset</title>
+
+<script src="site_libs/header-attrs-2.27/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-6.4.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">ashTray</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/eweine/ashTray">
+    <span class="fab fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Fitting a Separable Mixture to a Cancer
+Cell Line Dataset</h1>
+<h4 class="date">2025-01-27</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2025-02-06
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>ashTray/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted
+changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R
+Markdown file created these results, you’ll want to first commit it to
+the Git repo. If you’re still working on the analysis, you can ignore
+this warning. When you’re finished, you can run
+<code>wflow_publish</code> to commit the R Markdown file and build the
+HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20250123code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20250123)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20250123code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20250123)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree7bb1f098d411030d69a34e702a32602e420f4d90targetblank7bb1f09a">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong>
+<a href="https://github.com/eweine/ashTray/tree/7bb1f098d411030d69a34e702a32602e420f4d90" target="_blank">7bb1f09</a>
+</a>
+</p>
+</div>
+<div
+id="strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree7bb1f098d411030d69a34e702a32602e420f4d90targetblank7bb1f09a"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version
+<a href="https://github.com/eweine/ashTray/tree/7bb1f098d411030d69a34e702a32602e420f4d90" target="_blank">7bb1f09</a>.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .Rhistory
+    Ignored:    analysis/.Rhistory
+
+Untracked files:
+    Untracked:  analysis/ed_em_cancer.Rmd
+    Untracked:  data/fitted_models/
+    Untracked:  data/processed_data/
+    Untracked:  data/raw_data/
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with
+<code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Here, I was interested in trying out fitting a mixture of separable
+normal distributions to a real dataset, and comparing that to the UD
+model. Specifically, UD will be fitting the model:</p>
+<p><span class="math display">\[\begin{align*}
+    \textrm{vec}(\boldsymbol{Y}_{i}) &amp;\sim \mathcal{N}_{p}
+(\boldsymbol{\theta}_{i}, \boldsymbol{V}_{i}) \quad
+\textrm{independently for $i = 1, \dots, n$} \\
+     \boldsymbol{\theta}_{1}, \dots, \boldsymbol{\theta}_{n}
+&amp;\overset{\text{iid}} {\sim}  \pi_{0}\boldsymbol{\delta}_{0} +
+\sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{p}(\boldsymbol{0},
+\boldsymbol{\Sigma}_{k}),
+\end{align*}\]</span></p>
+<p>which I will be comparing to the following separable mixture
+model:</p>
+<p><span class="math display">\[\begin{align*}
+    \textrm{vec}(\boldsymbol{Y}_{i}) &amp;\sim \mathcal{N}_{p}
+(\boldsymbol{\theta}_{i}, \boldsymbol{V}_{i}) \quad
+\textrm{independently for $i = 1, \dots, n$} \\
+     \boldsymbol{\theta}_{1}, \dots, \boldsymbol{\theta}_{n}
+&amp;\overset{\text{iid}} {\sim}  \pi_{0}\boldsymbol{\delta}_{0} +
+\sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{p}(\boldsymbol{0},
+\boldsymbol{R}_{k} \otimes \boldsymbol{C}_{k}),
+\end{align*}\]</span></p>
+<p>where each matrix <span
+class="math inline">\(\boldsymbol{Y}_{i}\)</span> is <span
+class="math inline">\(pq \times pq\)</span>, each <span
+class="math inline">\(\boldsymbol{R}_{k}\)</span> is <span
+class="math inline">\(p \times p\)</span>, and each <span
+class="math inline">\(\boldsymbol{C}_{k}\)</span> is <span
+class="math inline">\(q \times q\)</span>.</p>
+<p>I will be fitting these models to a <a
+href="https://www.nature.com/articles/s41467-020-17440-w">dataset</a> of
+3 different cancer drugs applied to 24 different cancer cell lines. For
+each cell line and each treatment, I computed differential expression
+summary statistics (vs. a control treatment) by treating each cell as an
+independent observation and fitting a quasiPoisson GLM.</p>
+<pre class="r"><code>library(dplyr)
+library(Matrix)
+
+Y_bor &lt;- Matrix::readMM(&quot;data/raw_data/Bortezomib_24hr_expt1/matrix.mtx&quot;)
+bcs_bor &lt;- readr::read_csv(&quot;data/raw_data/Bortezomib_24hr_expt1/barcodes.tsv&quot;, col_names = c(&quot;bc&quot;))
+genes_bor &lt;- readr::read_csv(&quot;data/raw_data/Bortezomib_24hr_expt1/genes.tsv&quot;, col_names = c(&quot;gene&quot;))
+colnames(Y_bor) &lt;- bcs_bor$bc
+rownames(Y_bor) &lt;- genes_bor$gene
+md_bor &lt;- readr::read_csv(&quot;data/raw_data/Bortezomib_24hr_expt1/classifications.csv&quot;)
+md_bor &lt;- md_bor %&gt;% dplyr::filter(
+  cell_quality == &quot;normal&quot;
+)
+Y_bor &lt;- Y_bor[,md_bor$barcode]
+md_bor$treatment &lt;- &quot;bortezomib&quot;
+
+
+Y_tra &lt;- Matrix::readMM(&quot;data/raw_data/Trametinib_24hr_expt1/matrix.mtx&quot;)
+bcs_tra &lt;- readr::read_csv(&quot;data/raw_data/Trametinib_24hr_expt1/barcodes.tsv&quot;, col_names = c(&quot;bc&quot;))
+genes_tra &lt;- readr::read_csv(&quot;data/raw_data/Trametinib_24hr_expt1/genes.tsv&quot;, col_names = c(&quot;gene&quot;))
+colnames(Y_tra) &lt;- bcs_tra$bc
+rownames(Y_tra) &lt;- genes_tra$gene
+md_tra &lt;- readr::read_csv(&quot;data/raw_data/Trametinib_24hr_expt1/classifications.csv&quot;)
+md_tra &lt;- md_tra %&gt;% dplyr::filter(
+  cell_quality == &quot;normal&quot;
+)
+Y_tra &lt;- Y_tra[,md_tra$barcode]
+md_tra$treatment &lt;- &quot;trametinib&quot;
+
+Y_ida &lt;- Matrix::readMM(&quot;data/raw_data/Idasanutlin_24hr_expt1/matrix.mtx&quot;)
+bcs_ida &lt;- readr::read_csv(&quot;data/raw_data/Idasanutlin_24hr_expt1/barcodes.tsv&quot;, col_names = c(&quot;bc&quot;))
+genes_ida &lt;- readr::read_csv(&quot;data/raw_data/Idasanutlin_24hr_expt1/genes.tsv&quot;, col_names = c(&quot;gene&quot;))
+colnames(Y_ida) &lt;- bcs_ida$bc
+rownames(Y_ida) &lt;- genes_ida$gene
+md_ida &lt;- readr::read_csv(&quot;data/raw_data/Idasanutlin_24hr_expt1/classifications.csv&quot;)
+md_ida &lt;- md_ida %&gt;% dplyr::filter(
+  cell_quality == &quot;normal&quot; 
+)
+Y_ida &lt;- Y_ida[,md_ida$barcode]
+md_ida$treatment &lt;- &quot;idasanutlin&quot;
+
+Y_unt &lt;- Matrix::readMM(&quot;data/raw_data/DMSO_24hr_expt1/matrix.mtx&quot;)
+bcs_unt &lt;- readr::read_csv(&quot;data/raw_data/DMSO_24hr_expt1/barcodes.tsv&quot;, col_names = c(&quot;bc&quot;))
+genes_unt &lt;- readr::read_csv(&quot;data/raw_data/DMSO_24hr_expt1/genes.tsv&quot;, col_names = c(&quot;gene&quot;))
+colnames(Y_unt) &lt;- bcs_unt$bc
+rownames(Y_unt) &lt;- genes_unt$gene
+md_unt &lt;- readr::read_csv(&quot;data/raw_data/DMSO_24hr_expt1/classifications.csv&quot;)
+md_unt &lt;- md_unt %&gt;% dplyr::filter(
+  cell_quality == &quot;normal&quot; 
+)
+Y_unt &lt;- Y_unt[,md_unt$barcode]
+md_unt$treatment &lt;- &quot;dmso&quot;
+
+Y &lt;- cbind(
+  as.matrix(Y_unt), as.matrix(Y_tra), as.matrix(Y_bor), as.matrix(Y_ida)
+)
+Y &lt;- as(Y, &quot;CsparseMatrix&quot;)
+Y &lt;- Y[Matrix::rowSums(Y) &gt; 0, ]
+
+md &lt;- rbind(md_unt, md_tra, md_bor, md_ida)
+counts &lt;- Matrix::t(Y)
+
+rm(Y_bor, Y_ida, Y_tra, Y_unt, md_unt, md_tra, md_ida, md_bor, Y)
+gc()
+
+# require that each gene is expressed in at least 10 cells
+genes_to_use &lt;- which(Matrix::colSums(counts&gt;0)&gt;9)
+counts &lt;- counts[, genes_to_use]
+
+counts &lt;- counts[md$barcode, ]
+conditions &lt;- unique(md$treatment)
+conditions &lt;- conditions[conditions != &quot;dmso&quot;]
+
+res_list &lt;- list()
+
+for (ct in unique(md$singlet_ID)) {
+  
+  print(ct)
+  res_list[[ct]] &lt;- list()
+  
+  md_ct &lt;- md %&gt;% dplyr::filter(singlet_ID == ct)
+  counts_ct &lt;- counts[md_ct$barcode, ]
+  
+  md_control &lt;- md_ct %&gt;% dplyr::filter(treatment == &quot;dmso&quot;)
+  counts_ct_control &lt;- counts_ct[md_control$barcode, ]
+  md_control$treat &lt;- 0
+  
+  for (cond in conditions) {
+    
+    print(cond)
+    
+    md_ct_cond &lt;- md_ct %&gt;%
+      dplyr::filter(treatment == cond)
+    md_ct_cond$treat &lt;- 1
+    counts_ct_cond &lt;- counts_ct[md_ct_cond$barcode, ]
+    
+    est_vec &lt;- c()
+    se_vec &lt;- c()
+    gene_vec &lt;- c()
+    
+    for (gene in colnames(counts_ct_cond)) {
+      
+      try({
+        
+        # Prepare data
+        md_ct_cond$expr &lt;- counts_ct_cond[, gene]
+        md_control$expr &lt;- counts_ct_control[, gene]
+        md_glm &lt;- rbind(md_ct_cond, md_control)
+        
+        # Fit model
+        de_mod &lt;- glm(
+          expr ~ treat, 
+          family = quasipoisson, 
+          data = md_glm, 
+          offset = log(tot_reads),
+          control = list(maxit = 100)
+        )
+        
+        # If it succeeds, append results
+        est_vec  &lt;- c(est_vec, coef(summary(de_mod))[&quot;treat&quot;, &quot;Estimate&quot;])
+        se_vec   &lt;- c(se_vec, coef(summary(de_mod))[&quot;treat&quot;, &quot;Std. Error&quot;])
+        gene_vec &lt;- c(gene_vec, gene)
+        
+      }, silent = TRUE)
+      
+    }
+    
+    res_list[[ct]][[cond]] &lt;- data.frame(
+      gene = gene_vec,
+      b = est_vec,
+      se = se_vec
+    )
+    
+  }
+  
+}
+
+# first, I think it would be interesting to run udr on these data
+# and then see how separable the covariance matrices are
+
+all_data &lt;- do.call(
+  rbind,
+  lapply(names(res_list), function(ct) {
+    do.call(
+      rbind,
+      lapply(names(res_list[[ct]]), function(trt) {
+        df &lt;- res_list[[ct]][[trt]]
+        # Add columns identifying celltype and treatment
+        df$celltype  &lt;- ct
+        df$treatment &lt;- trt
+        df
+      })
+    )
+  })
+)
+
+
+all_df_b &lt;- all_data %&gt;%
+  tidyr::pivot_wider(
+    id_cols      = gene,                       # row identifier
+    names_from   = c(treatment, celltype),     # pivot by these two columns
+    values_from  = b,                          # values that fill the cells
+    names_sep    = &quot;_&quot;                         # how to combine treatment and celltype in the new col names
+  )
+
+b_mat &lt;- as.matrix(all_df_b[,-1])
+rownames(b_mat) &lt;- all_df_b$gene
+
+all_df_se &lt;- all_data %&gt;%
+  tidyr::pivot_wider(
+    id_cols      = gene,                       # row identifier
+    names_from   = c(treatment, celltype),     # pivot by these two columns
+    values_from  = se,                          # values that fill the cells
+    names_sep    = &quot;_&quot;                         # how to combine treatment and celltype in the new col names
+  )
+
+se_mat &lt;- as.matrix(all_df_se[,-1])
+rownames(se_mat) &lt;- all_df_se$gene
+
+library(udr)
+
+save(
+  b_mat,
+  se_mat,
+  file=&quot;data/processed_data/cancer_sc_multicond.Rdata&quot;
+)</code></pre>
+<p>Now, to actually fit the separable normal mixture model, I extended
+the extreme deconvolution algorithm to the case where all covariance
+matrices are constrained to be separable. I won’t give all the details
+here, but the E-step for this model is exactly the same as it is for the
+Ultimate Deconvolution model. However, the M-step is different.
+Specifically, the M-step involves maximizing the function</p>
+<p><span class="math display">\[f(\boldsymbol{R}_{k},
+\boldsymbol{C}_{k}) = -\frac{\sum_{i=1}^{n}\omega_{ik}}{2}
+\log|\boldsymbol{R}_{k} \otimes \boldsymbol{C}_{k}| -
+\frac{1}{2}\left(\sum_{i = 1}^{n} \omega_{ik}\left\{
+\boldsymbol{\mu}_{i}^{T} (\boldsymbol{R}_{k} \otimes
+\boldsymbol{C}_{k})^{-1} \boldsymbol{\mu}_{i} +
+\textrm{Tr}\left(\boldsymbol{S}_{i}(\boldsymbol{R}_{k} \otimes
+\boldsymbol{C}_{k})^{-1}\right)\right\}\right)\]</span></p>
+<p>for <span class="math inline">\(\boldsymbol{R}_{k}\)</span> and <span
+class="math inline">\(\boldsymbol{C}_{k}\)</span>. This can be optimized
+by alternating the following steps:</p>
+<span class="math display">\[\begin{aligned}
+\boldsymbol{R}_{k} &amp;\;\leftarrow\; \frac{1}{Wq}\,\sum_{i=1}^n
+\omega_i\,\mathrm{Tr}_2\Bigl[(\boldsymbol{I}_p\otimes
+\boldsymbol{C}_{k}^{-1})\,\boldsymbol{T}_i\Bigr],\\[6pt]
+\boldsymbol{C}_{k} &amp;\;\leftarrow\; \frac{1}{Wp}\,\sum_{i=1}^n
+\omega_i\,\mathrm{Tr}_1\Bigl[(\boldsymbol{R}_{k}^{-1}\otimes
+\boldsymbol{I}_q)\,\boldsymbol{T}_i\Bigr],
+\end{aligned}\]</span>
+<p>where <span class="math inline">\(W = \sum_{i = 1}^{n}
+\omega_{ik}\)</span>, <span class="math inline">\(\boldsymbol{T}_{i} =
+\boldsymbol{\mu}_{i}^{T} \boldsymbol{\mu}_{i} +
+\boldsymbol{S}_{i}\)</span>, and <span
+class="math inline">\(Tr_{1}\)</span> and <span
+class="math inline">\(Tr_{2}\)</span> are partial traces over blocks of
+size <span class="math inline">\(q\)</span> and <span
+class="math inline">\(p\)</span>, respectively</p>
+<pre class="cpp"><code>// [[Rcpp::depends(RcppEigen)]]
+// [[Rcpp::depends(RcppEigen, BH)]]
+
+#include &lt;RcppEigen.h&gt;
+#include &lt;unsupported/Eigen/KroneckerProduct&gt;
+#include &lt;vector&gt;
+#include &lt;cmath&gt;
+
+using namespace Rcpp;
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
+using std::vector;
+
+//==============================================================================
+// Helper: Invert a symmetric positive–definite matrix using its Cholesky factorization
+//------------------------------------------------------------------------------
+MatrixXd spd_inv(const MatrixXd &amp; A) {
+  // Use Eigen’s LLT (Cholesky) factorization:
+  Eigen::LLT&lt;MatrixXd&gt; lltOfA(A);
+  return lltOfA.solve(MatrixXd::Identity(A.rows(), A.cols()));
+}
+
+//==============================================================================
+// Helper: Compute the log–likelihood for one multivariate normal observation
+//    loglik = -0.5 * ( y&#39; Sigma^{-1} y ) - (sum(log(diag(chol(Sigma))))
+//    (note: in R your code computed half_logdet = sum(log(diag(L))) )
+//------------------------------------------------------------------------------
+// Version for a full dense matrix
+double get_mvn_loglik_1point(const Eigen::VectorXd &amp; y, const Eigen::MatrixXd &amp; Sigma) {
+  Eigen::LLT&lt;Eigen::MatrixXd&gt; llt(Sigma);
+  Eigen::MatrixXd L = llt.matrixL();   // Cholesky factor: Sigma = L * L&#39;
+  // Compute the half-log determinant: sum(log(diag(L)))
+  double half_logdet = L.diagonal().array().log().sum();
+  // Solve for Sigma^{-1} * y via the Cholesky factorization
+  Eigen::VectorXd sol = llt.solve(y);
+  double quad_form = y.dot(sol);
+  double loglik = -0.5 * quad_form - half_logdet;
+  return loglik;
+}
+
+// Version for a diagonal matrix
+double get_mvn_loglik_1point_diag(const Eigen::VectorXd &amp; y,
+                             const Eigen::DiagonalMatrix&lt;double, Eigen::Dynamic&gt; Sigma) {
+  // For a diagonal matrix, the &quot;Cholesky&quot; is trivial: it&#39;s just the elementwise square root.
+  Eigen::VectorXd d = Sigma.diagonal();
+  Eigen::VectorXd L_diag = d.array().sqrt();
+  double half_logdet = L_diag.array().log().sum();
+  // The inverse of a diagonal matrix is the reciprocal of the diagonal entries.
+  Eigen::VectorXd sol = y.array() / d.array();
+  double quad_form = y.dot(sol);
+  double loglik = -0.5 * quad_form - half_logdet;
+  return loglik;
+}
+
+VectorXd get_mvn_loglik_per_pt(const MatrixXd &amp; Y_T,
+                                   const MatrixXd &amp; V_diag,
+                                   const MatrixXd &amp; U) {
+  int n = Y_T.cols();
+  VectorXd loglik_vec(n);
+  for (int i = 0; i &lt; n; i++) {
+    // Get observation y (as a column vector)
+    VectorXd y = Y_T.col(i);
+    // Sigma = U + V_list[i]
+    MatrixXd Sigma = U;
+    Sigma.diagonal() += V_diag.col(i);
+    loglik_vec(i) = get_mvn_loglik_1point(y, Sigma);
+  }
+  return loglik_vec;
+}
+
+VectorXd get_mvn_sep_loglik_per_pt(const MatrixXd &amp; Y_T,
+                                   const MatrixXd &amp; V_diag,
+                                   const MatrixXd &amp; R,
+                                   const MatrixXd &amp; C) {
+
+  MatrixXd U = Eigen::kroneckerProduct(R, C);
+  return get_mvn_loglik_per_pt(Y_T, V_diag, U);
+}
+
+//==============================================================================
+// Helper: Compute log-likelihood per point under the &quot;null&quot; (nonseparable) model,
+//    i.e. using Sigma = V_list[i] only.
+//------------------------------------------------------------------------------
+VectorXd get_null_loglik_per_pt(const MatrixXd &amp; Y_T,
+                                const MatrixXd &amp; V_diag) {
+  int n = Y_T.cols();
+  VectorXd loglik_vec(n);
+  for (int i = 0; i &lt; n; i++) {
+    VectorXd y = Y_T.col(i);
+    loglik_vec(i) = get_mvn_loglik_1point_diag(y, V_diag.col(i).asDiagonal());
+  }
+  return loglik_vec;
+}
+
+//==============================================================================
+// Helper: Compute responsibilities given mixture weights and components.
+//    R_list and C_list should be vectors (one per component) for the separable
+//    components; the last component (index K-1) is assumed to be the null.
+//------------------------------------------------------------------------------
+MatrixXd get_responsibilities(const MatrixXd &amp; Y_T,
+                              const MatrixXd &amp; V_diag,
+                              const vector&lt;MatrixXd&gt; &amp; R_list,
+                              const vector&lt;MatrixXd&gt; &amp; C_list,
+                              const VectorXd &amp; Pi) {
+  int n = Y_T.cols();
+  int K = Pi.size();
+  MatrixXd omega = MatrixXd::Zero(n, K);
+  
+  // For mixture components 0,...,K-2 (all but the null)
+  for (int k = 0; k &lt; K - 1; k++) {
+    VectorXd loglik = get_mvn_sep_loglik_per_pt(Y_T, V_diag, R_list[k], C_list[k]);
+    // Multiply by Pi[k] and exponentiate
+    for (int i = 0; i &lt; n; i++) {
+      omega(i, k) = Pi(k) * std::exp(loglik(i));
+    }
+  }
+  // For the null component (last one)
+  {
+    VectorXd loglik = get_null_loglik_per_pt(Y_T, V_diag);
+    for (int i = 0; i &lt; n; i++) {
+      omega(i, K - 1) = Pi(K - 1) * std::exp(loglik(i));
+    }
+  }
+  // Normalize responsibilities so that each row sums to 1
+  for (int i = 0; i &lt; n; i++) {
+    double rowSum = omega.row(i).sum();
+    if (rowSum &gt; 0)
+      omega.row(i) /= rowSum;
+  }
+  return omega;
+}
+
+
+MatrixXd get_responsibilities_non_sep(const MatrixXd &amp; Y_T,
+                              const MatrixXd &amp; V_diag,
+                              const vector&lt;MatrixXd&gt; &amp; U_list,
+                              const VectorXd &amp; Pi) {
+  int n = Y_T.cols();
+  int K = Pi.size();
+  MatrixXd omega = MatrixXd::Zero(n, K);
+  
+  // For mixture components 0,...,K-2 (all but the null)
+  for (int k = 0; k &lt; K - 1; k++) {
+    VectorXd loglik = get_mvn_loglik_per_pt(Y_T, V_diag, U_list[k]);
+    // Multiply by Pi[k] and exponentiate
+    for (int i = 0; i &lt; n; i++) {
+      omega(i, k) = Pi(k) * std::exp(loglik(i));
+    }
+  }
+  // For the null component (last one)
+  {
+    VectorXd loglik = get_null_loglik_per_pt(Y_T, V_diag);
+    for (int i = 0; i &lt; n; i++) {
+      omega(i, K - 1) = Pi(K - 1) * std::exp(loglik(i));
+    }
+  }
+  // Normalize responsibilities so that each row sums to 1
+  for (int i = 0; i &lt; n; i++) {
+    double rowSum = omega.row(i).sum();
+    if (rowSum &gt; 0)
+      omega.row(i) /= rowSum;
+  }
+  return omega;
+}
+
+//==============================================================================
+// Helper: Update mixture weights Pi by taking column means of responsibilities.
+//------------------------------------------------------------------------------
+VectorXd update_Pi(const MatrixXd &amp; omega) {
+  // Each column&#39;s mean is the new Pi component.
+  return omega.colwise().mean();
+}
+
+//==============================================================================
+// Helper: Compute the posterior moment matrix given U, V, and an observation y.
+//    Implements:
+//      mat_prod = U * spd_inv(U + V)
+//      m = mat_prod * y
+//      S = U - mat_prod * U
+//      Tj = m m&#39; + S
+//------------------------------------------------------------------------------
+MatrixXd get_post_moment(
+    const MatrixXd &amp; U, const Eigen::DiagonalMatrix&lt;double, Eigen::Dynamic&gt; V, const VectorXd &amp; y
+) {
+  
+  MatrixXd UplusV = U;
+  UplusV.diagonal() += V.diagonal();
+  MatrixXd invUplusV = spd_inv(UplusV);
+  MatrixXd mat_prod = U * invUplusV;
+  VectorXd m = mat_prod * y;
+  MatrixXd S = U - mat_prod * U;
+  MatrixXd Tj = m * m.transpose() + S;
+  return Tj;
+}
+
+
+MatrixXd get_post_mean(
+    const MatrixXd &amp; U, const Eigen::DiagonalMatrix&lt;double, Eigen::Dynamic&gt; V, const VectorXd &amp; y
+) {
+  
+  MatrixXd UplusV = U;
+  UplusV.diagonal() += V.diagonal();
+  MatrixXd invUplusV = spd_inv(UplusV);
+  MatrixXd mat_prod = U * invUplusV;
+  VectorXd m = mat_prod * y;
+  return m;
+}
+
+//==============================================================================
+// Helper: partial_trace_1
+//   Interprets M as a (p*q) x (p*q) matrix arranged in p blocks of rows (each of size q)
+//   and computes the q x q matrix whose (k,l)-th entry is the sum over a = 0,...,p-1 of
+//      M( a*q + k, a*q + l ).
+//------------------------------------------------------------------------------
+MatrixXd partial_trace_1(const MatrixXd &amp; M, int p, int q) {
+  MatrixXd out = MatrixXd::Zero(q, q);
+  for (int k = 0; k &lt; q; k++) {
+    for (int l = 0; l &lt; q; l++) {
+      double s = 0.0;
+      for (int a = 0; a &lt; p; a++) {
+        int row_idx = a * q + k;
+        int col_idx = a * q + l;
+        s += M(row_idx, col_idx);
+      }
+      out(k, l) = s;
+    }
+  }
+  return out;
+}
+
+//==============================================================================
+// Helper: partial_trace_2
+//   Interprets M as a (p*q) x (p*q) matrix arranged in p blocks of columns (each of size q)
+//   and computes the p x p matrix whose (a,b)-th entry is the trace of the (a,b)-th q x q block:
+//       out(a,b) = sum_{k=0}^{q-1} M(a*q+k, b*q+k)
+//------------------------------------------------------------------------------
+MatrixXd partial_trace_2(const MatrixXd &amp; M, int p, int q) {
+  MatrixXd out = MatrixXd::Zero(p, p);
+  for (int a = 0; a &lt; p; a++) {
+    for (int b = 0; b &lt; p; b++) {
+      double s = 0.0;
+      for (int k = 0; k &lt; q; k++) {
+        int row_idx = a * q + k;
+        int col_idx = b * q + k;
+        s += M(row_idx, col_idx);
+      }
+      out(a, b) = s;
+    }
+  }
+  return out;
+}
+
+//==============================================================================
+// A simple struct for returning R and C from the alternating optimization
+//------------------------------------------------------------------------------
+struct RC {
+  MatrixXd R;
+  MatrixXd C;
+};
+
+//==============================================================================
+// Helper: opt_RC_given_T_omega
+//   Given a vector of matrices T_list (one per data point), initial estimates R and C,
+//   and a vector omega (responsibilities for these data points), perform n_iter alternating
+//   updates. (This is the weighted flip-flop update.)
+//------------------------------------------------------------------------------
+RC opt_RC_given_T_omega(const vector&lt;MatrixXd&gt; &amp; T_list,
+                          MatrixXd R, MatrixXd C,
+                          const VectorXd &amp; omega,
+                          int n_iter = 5) {
+  int n = T_list.size();
+  int p = R.rows();
+  int q = C.rows();
+  double W = omega.sum();
+  
+  // Precompute identity matrices
+  MatrixXd I_p = MatrixXd::Identity(p, p);
+  MatrixXd I_q = MatrixXd::Identity(q, q);
+  
+  for (int iter = 0; iter &lt; n_iter; iter++) {
+    // --- Update R given C ---
+    MatrixXd R_sum = MatrixXd::Zero(p, p);
+    MatrixXd C_inv = spd_inv(C);
+    // Form A_mat = I_p kron C_inv  (size: (p*q) x (p*q))
+    MatrixXd A_mat = Eigen::kroneckerProduct(I_p, C_inv);
+    for (int i = 0; i &lt; n; i++) {
+      MatrixXd temp_R = A_mat * T_list[i];
+      R_sum += omega(i) * partial_trace_2(temp_R, p, q);
+    }
+    R = R_sum / (q * W);
+    
+    // --- Update C given R ---
+    MatrixXd C_sum = MatrixXd::Zero(q, q);
+    MatrixXd R_inv = spd_inv(R);
+    // Form B_mat = R_inv kron I_q
+    MatrixXd B_mat = Eigen::kroneckerProduct(R_inv, I_q);
+    for (int i = 0; i &lt; n; i++) {
+      MatrixXd temp_C = B_mat * T_list[i];
+      C_sum += omega(i) * partial_trace_1(temp_C, p, q);
+    }
+    C = C_sum / (p * W);
+  }
+  RC out;
+  out.R = R;
+  out.C = C;
+  return out;
+}
+
+//==============================================================================
+// Helper: get_T_list
+//   Given data Y (n x d), a vector of matrices V_list (one per data point),
+//   and a matrix U, return a vector T_list (of length n) where each T_list[i]
+//   is computed via get_post_moment(U, V_list[i], y[i]).
+//------------------------------------------------------------------------------
+vector&lt;MatrixXd&gt; get_T_list(const MatrixXd &amp; Y_T,
+                            const MatrixXd &amp; V_diag,
+                            const MatrixXd &amp; U) {
+  int n = Y_T.cols();
+  vector&lt;MatrixXd&gt; T_list;
+  T_list.reserve(n);
+  for (int i = 0; i &lt; n; i++) {
+    VectorXd y = Y_T.col(i);
+    T_list.push_back(get_post_moment(U, V_diag.col(i).asDiagonal(), y));
+  }
+  return T_list;
+}
+
+//==============================================================================
+// Helper: loglik_em
+//   Compute the overall log–likelihood for the EM algorithm given data Y,
+//   a vector V_list, and for each mixture component (separable components are given
+//   by corresponding R_list and C_list) and the mixture weights Pi.
+//------------------------------------------------------------------------------
+// [[Rcpp::export]]
+double loglik_em(const MatrixXd &amp; Y_T,
+                 const MatrixXd &amp; V_diag,
+                 const vector&lt;MatrixXd&gt; &amp; R_list,
+                 const vector&lt;MatrixXd&gt; &amp; C_list,
+                 const VectorXd &amp; Pi) {
+  int n = Y_T.cols();
+  int K = Pi.size();
+  MatrixXd lik_mat = MatrixXd::Zero(n, K);
+  
+  // For components 0,...,K-2 (separable components)
+  for (int k = 0; k &lt; K - 1; k++) {
+    VectorXd loglik = get_mvn_sep_loglik_per_pt(Y_T, V_diag, R_list[k], C_list[k]);
+    for (int i = 0; i &lt; n; i++) {
+      lik_mat(i, k) = Pi(k) * std::exp(loglik(i));
+    }
+  }
+  // For the null component (last one)
+  {
+    VectorXd loglik = get_null_loglik_per_pt(Y_T, V_diag);
+    for (int i = 0; i &lt; n; i++) {
+      lik_mat(i, K - 1) = Pi(K - 1) * std::exp(loglik(i));
+    }
+  }
+  // Sum over rows and then take log and sum over observations
+  double ll = 0.0;
+  for (int i = 0; i &lt; n; i++) {
+    double rowSum = lik_mat.row(i).sum();
+    if (rowSum &gt; 0)
+      ll += std::log(rowSum);
+  }
+  return ll;
+}
+
+
+// [[Rcpp::export]]
+double loglik_em_non_sep(const MatrixXd &amp; Y_T,
+                 const MatrixXd &amp; V_diag,
+                 const vector&lt;MatrixXd&gt; &amp; U_list,
+                 const VectorXd &amp; Pi) {
+  int n = Y_T.cols();
+  int K = Pi.size();
+  MatrixXd lik_mat = MatrixXd::Zero(n, K);
+  
+  // For components 0,...,K-2 (separable components)
+  for (int k = 0; k &lt; K - 1; k++) {
+    VectorXd loglik = get_mvn_loglik_per_pt(Y_T, V_diag, U_list[k]);
+    for (int i = 0; i &lt; n; i++) {
+      lik_mat(i, k) = Pi(k) * std::exp(loglik(i));
+    }
+  }
+  // For the null component (last one)
+  {
+    VectorXd loglik = get_null_loglik_per_pt(Y_T, V_diag);
+    for (int i = 0; i &lt; n; i++) {
+      lik_mat(i, K - 1) = Pi(K - 1) * std::exp(loglik(i));
+    }
+  }
+  // Sum over rows and then take log and sum over observations
+  double ll = 0.0;
+  for (int i = 0; i &lt; n; i++) {
+    double rowSum = lik_mat.row(i).sum();
+    if (rowSum &gt; 0)
+      ll += std::log(rowSum);
+  }
+  return ll;
+}
+
+// [[Rcpp::export]]
+MatrixXd get_mixture_post_mean(const MatrixXd &amp; Y_T,
+                 const MatrixXd &amp; V_diag,
+                 const vector&lt;MatrixXd&gt; &amp; R_list,
+                 const vector&lt;MatrixXd&gt; &amp; C_list,
+                 const VectorXd &amp; Pi) {
+  int n = Y_T.cols();
+  int K = Pi.size();
+  MatrixXd mean_mat(Y_T.rows(), Y_T.cols());
+  mean_mat.setZero();
+
+  MatrixXd responsibilities = get_responsibilities(Y_T,
+                              V_diag,
+                              R_list,
+                              C_list,
+                              Pi);
+
+  for (int k = 0; k &lt; K - 1; k++){
+
+    MatrixXd U = Eigen::kroneckerProduct(R_list[k], C_list[k]);
+    for (int i = 0; i &lt; Y_T.cols(); i++){
+      
+      mean_mat.col(i) += responsibilities(i, k) * get_post_mean(
+            U,  
+            V_diag.col(i).asDiagonal(), 
+            Y_T.col(i)
+      );
+      
+      }
+
+  }
+
+  return mean_mat;
+}
+
+
+// [[Rcpp::export]]
+MatrixXd get_mixture_post_mean_non_sep(const MatrixXd &amp; Y_T,
+                 const MatrixXd &amp; V_diag,
+                 const vector&lt;MatrixXd&gt; &amp; U_list,
+                 const VectorXd &amp; Pi) {
+  int n = Y_T.cols();
+  int K = Pi.size();
+  MatrixXd mean_mat(Y_T.rows(), Y_T.cols());
+  mean_mat.setZero();
+
+  MatrixXd responsibilities = get_responsibilities_non_sep(Y_T,
+                              V_diag,
+                              U_list,
+                              Pi);
+
+  for (int k = 0; k &lt; K - 1; k++){
+
+    MatrixXd U = U_list[k];
+    for (int i = 0; i &lt; Y_T.cols(); i++){
+      
+      mean_mat.col(i) += responsibilities(i, k) * get_post_mean(
+            U,  
+            V_diag.col(i).asDiagonal(), 
+            Y_T.col(i)
+      );
+      
+      }
+
+  }
+
+  return mean_mat;
+}
+
+//==============================================================================
+// Final exported function: optim_em_ed
+//
+// This function implements the full EM algorithm. The inputs are:
+//   - Y: an n x d matrix of observations (each row is an observation)
+//   - V_list: a list (vector) of matrices (each n x n) corresponding to V for each point
+//   - p: desired dimension of R (R is p x p)
+//   - q: desired dimension of C (C is q x q)
+//   - K: number of mixture components (the last one is assumed to be the null component)
+//   - maxiter: maximum number of EM iterations
+//
+// The function returns a list with the final mixture weights (Pi),
+//   a vector of R matrices (R_list), a vector of C matrices (C_list),
+//   and a vector of log-likelihood values (loglik).
+//------------------------------------------------------------------------------
+  
+// [[Rcpp::export]]
+Rcpp::List optim_em_ed_cpp(const Eigen::MatrixXd &amp; Y_T,
+                       const Eigen::MatrixXd &amp; V_diag,
+                       int p, int q, int K,
+                       int maxiter = 100) {
+  int n = Y_T.cols();
+  
+  // Initialize mixture weights Pi randomly and normalize
+  VectorXd Pi = VectorXd::Random(K).array().abs();  // abs to ensure nonnegative
+  Pi /= Pi.sum();
+  
+  // Initialize R_list and C_list as vectors of matrices.
+  // For components 0,...,K-2 (the separable ones) we initialize diagonal matrices.
+  vector&lt;MatrixXd&gt; R_list;
+  vector&lt;MatrixXd&gt; C_list;
+  R_list.reserve(K - 1);
+  C_list.reserve(K - 1);
+  for (int k = 0; k &lt; K - 1; k++) {
+    // Create a p x p diagonal matrix with random entries in [0.25,2]
+    VectorXd diagR = 0.25 + (2 - 0.25) * VectorXd::Random(p).array().abs();
+    MatrixXd R_init = diagR.asDiagonal();
+    R_list.push_back(R_init);
+    
+    VectorXd diagC = 0.25 + (2 - 0.25) * VectorXd::Random(q).array().abs();
+    MatrixXd C_init = diagC.asDiagonal();
+    C_list.push_back(C_init);
+  }
+  
+  // Store log-likelihood values here
+  vector&lt;double&gt; loglik_vec;
+  double loglik = loglik_em(Y_T, V_diag, R_list, C_list, Pi);
+  loglik_vec.push_back(loglik);
+  
+  // EM iterations
+  for (int iter = 0; iter &lt; maxiter; iter++) {
+    Rcpp::Rcout &lt;&lt; &quot;Iteration &quot; &lt;&lt; iter + 1 &lt;&lt; &quot;: loglik = &quot; &lt;&lt; loglik &lt;&lt; std::endl;
+    
+    // E-step: compute responsibilities (n x K matrix)
+    MatrixXd omega = get_responsibilities(Y_T, V_diag, R_list, C_list, Pi);
+    
+    // M-step: update Pi from responsibilities
+    Pi = update_Pi(omega);
+    
+    // For each separable component, update R and C by solving the weighted problem.
+    for (int k = 0; k &lt; K - 1; k++) {
+      // For the kth component, form U = kronecker(R, C)
+      MatrixXd U = Eigen::kroneckerProduct(R_list[k], C_list[k]);
+      // Get T_list for this component.
+      vector&lt;MatrixXd&gt; T_list = get_T_list(Y_T, V_diag, U);
+
+      // Update R and C using the weighted flip-flop update.
+      RC opt_RC = opt_RC_given_T_omega(
+        T_list, R_list[k], C_list[k], omega.col(k), 5
+      );
+      R_list[k] = opt_RC.R;
+      C_list[k] = opt_RC.C;
+    }
+    
+    // Update overall log–likelihood
+    loglik = loglik_em(Y_T, V_diag, R_list, C_list, Pi);
+    loglik_vec.push_back(loglik);
+  }
+  
+  // Prepare return values.
+  // We return:
+  //   Pi: the final mixture weights,
+  //   R_list: a list (Rcpp::List) of R matrices,
+  //   C_list: a list (Rcpp::List) of C matrices,
+  //   loglik: a NumericVector of log-likelihood values.
+  Rcpp::List R_list_Rcpp(R_list.size());
+  Rcpp::List C_list_Rcpp(C_list.size());
+  for (unsigned int k = 0; k &lt; R_list.size(); k++) {
+    R_list_Rcpp[k] = Rcpp::wrap(R_list[k]);
+    C_list_Rcpp[k] = Rcpp::wrap(C_list[k]);
+  }
+  Rcpp::NumericVector loglik_out(loglik_vec.size());
+  for (unsigned int i = 0; i &lt; loglik_vec.size(); i++) {
+    loglik_out[i] = loglik_vec[i];
+  }
+  
+  return Rcpp::List::create(Rcpp::Named(&quot;Pi&quot;) = Pi,
+                            Rcpp::Named(&quot;R_list&quot;) = R_list_Rcpp,
+                            Rcpp::Named(&quot;C_list&quot;) = C_list_Rcpp,
+                            Rcpp::Named(&quot;loglik&quot;) = loglik_out);
+}
+</code></pre>
+<pre class="r"><code>spd_inv &lt;- function(A) {
+  
+  chol2inv(chol(A))
+  
+}
+
+get_mvn_loglik_1point &lt;- function(y, Sigma) {
+  
+  chol_Sigma &lt;- chol(Sigma)
+  Sigma_inv &lt;- chol2inv(chol_Sigma)
+  half_logdet_Sigma &lt;- sum(log(diag(chol_Sigma)))
+  quad_form &lt;- as.vector(crossprod(y, Sigma_inv %*% y))
+  loglik &lt;- -0.5 * quad_form - half_logdet_Sigma
+  return(loglik)
+  
+}
+
+get_mvn_sep_loglik_per_pt &lt;- function(Y, V_list, R, C) {
+  
+  n &lt;- nrow(Y)
+  loglik_vec &lt;- numeric(n)
+  U &lt;- kronecker(R, C)
+  
+  for (i in seq_len(n)) {
+    
+    loglik_vec[i] &lt;- get_mvn_loglik_1point(Y[i, ], U + V_list[[i]])
+    
+  }
+  
+  return(loglik_vec)
+  
+}
+
+# Note that in the typical case where each V is diagonal, these calculations
+# can be greatly simplified because inverting each V is trivial
+get_null_loglik_per_pt &lt;- function(Y, V_list) {
+  
+  n &lt;- nrow(Y)
+  loglik_vec &lt;- numeric(n)
+  
+  for (i in seq_len(n)) {
+    
+    loglik_vec[i] &lt;- get_mvn_loglik_1point(Y[i, ], V_list[[i]])
+    
+  }
+  
+  return(loglik_vec)
+  
+}
+
+# get responsibilities given mixture weights and components
+# by default, make the last mixture weight correspond to the null
+get_responsibilities &lt;- function(Y, V_list, R_list, C_list, Pi) {
+  
+  K &lt;- length(Pi)
+  omega &lt;- matrix(
+    data = 0,
+    nrow = nrow(Y),
+    ncol = K
+  )
+  
+  for (k in 1:(K - 1)) {
+    
+    omega[, k] &lt;- Pi[k] * exp(
+      get_mvn_sep_loglik_per_pt(Y, V_list, R_list[[k]], C_list[[k]])
+    )
+    
+  }
+  
+  omega[, K] &lt;- Pi[K] * exp(get_null_loglik_per_pt(Y, V_list))
+  omega &lt;- omega / rowSums(omega)
+  
+  return(omega)
+  
+}
+
+# input vector of responsibilties
+update_Pi &lt;- function(omega) {
+  
+  return(
+    colMeans(omega)
+  )
+  
+}
+
+get_post_moment &lt;- function(U, V, y) {
+  
+  # in general if U is a kronecker product I think that these matrix 
+  # multiplications could probably be done a bit faster
+  mat_prod &lt;- U %*% spd_inv(U + V)
+  m &lt;- mat_prod %*% y
+  S &lt;- U - mat_prod %*% U
+  Tj &lt;- tcrossprod(m) + S
+  return(Tj)
+  
+}
+
+#--------------------------------------------------------------------
+# Helper: partial_trace_1(M, p, q)
+#   Similarly, interprets M as a (p*q) x (p*q) block matrix and takes
+#   the partial trace over the &quot;first&quot; dimension (p). The result is
+#   a q x q matrix. 
+#
+#   The (k,l)-th entry is sum_{a=1..p} of M[ (a-1)*q + k, (a-1)*q + l].
+#--------------------------------------------------------------------
+partial_trace_1 &lt;- function(M, p, q) {
+  out &lt;- matrix(0, q, q)
+  for (k in seq_len(q)) {
+    for (l in seq_len(q)) {
+      s &lt;- 0
+      for (a in seq_len(p)) {
+        row_idx &lt;- (a - 1) * q + k
+        col_idx &lt;- (a - 1) * q + l
+        s &lt;- s + M[row_idx, col_idx]
+      }
+      out[k, l] &lt;- s
+    }
+  }
+  out
+}
+
+#--------------------------------------------------------------------
+# Helper: partial_trace_2(M, p, q)
+#   Interprets M as a (p*q) x (p*q) block matrix with p x p blocks,
+#   each block is q x q. This function returns a p x p matrix whose
+#   (a,b)-th entry is the trace of the (a,b) block of M (i.e. sum of
+#   diagonal elements in that q x q block).
+#--------------------------------------------------------------------
+partial_trace_2 &lt;- function(M, p, q) {
+  out &lt;- matrix(0, p, p)
+  for (a in seq_len(p)) {
+    for (b in seq_len(p)) {
+      # Diagonal elements within the (a,b)-th block
+      # Block row indices:   (a-1)*q + 1 : a*q
+      # Block col indices:   (b-1)*q + 1 : b*q
+      # We sum M[ row_k, col_k ] for k in 1..q
+      s &lt;- 0
+      for (k in seq_len(q)) {
+        row_idx &lt;- (a - 1) * q + k
+        col_idx &lt;- (b - 1) * q + k
+        s &lt;- s + M[row_idx, col_idx]
+      }
+      out[a, b] &lt;- s
+    }
+  }
+  out
+}
+
+# here, omega stores the responsibilities
+opt_RC_given_T_omega &lt;- function(T_list, R, C, omega, n_iter = 5) {
+  
+  #--------------------------------------------------------------------
+  # Main loop: alternate updating R and C
+  #--------------------------------------------------------------------
+  n &lt;- length(T_list)  # number of T_i&#39;s
+  p &lt;- nrow(R)         # dimension of R (R is p x p)
+  q &lt;- nrow(C)         # dimension of C (C is q x q)
+  
+  # Precompute the identity matrices (they are used for the Kronecker products)
+  I_p &lt;- diag(p)
+  I_q &lt;- diag(q)
+  W &lt;- sum(omega)
+  
+  for (iter in seq_len(n_iter)) {
+    
+    # --- Update R given C ---
+    R_sum &lt;- matrix(0, p, p)
+    C_inv &lt;- spd_inv(C)  # assume C is invertible
+    # Form the matrix I_p \otimes C_inv which is (p*q) x (p*q)
+    A_mat &lt;- kronecker(I_p, C_inv)
+    
+    for (i in seq_len(n)) {
+      # Compute (I_p \otimes C_inv) %*% T_i.
+      # This multiplies every q x q block of T_i on the left by C_inv.
+      temp_R &lt;- A_mat %*% T_list[[i]]
+      # Then take the partial trace over the second dimension
+      R_sum &lt;- R_sum + omega[i] * partial_trace_2(temp_R, p, q)
+    }
+    R &lt;- R_sum / (q * W)
+    
+    # --- Update C given R ---
+    C_sum &lt;- matrix(0, q, q)
+    R_inv &lt;- spd_inv(R)  # assume R is invertible
+    # Form the matrix R_inv \otimes I_q which is (p*q) x (p*q)
+    B_mat &lt;- kronecker(R_inv, I_q)
+    
+    for (i in seq_len(n)) {
+      # Compute (R_inv \otimes I_q) %*% T_i.
+      # This multiplies every block of T_i (arranged in p blocks of rows)
+      # on the left by R_inv.
+      temp_C &lt;- B_mat %*% T_list[[i]]
+      # Then take the partial trace over the first dimension
+      C_sum &lt;- C_sum + omega[i] * partial_trace_1(temp_C, p, q)
+    }
+    C &lt;- C_sum / (p * W)
+  }
+  
+  # Return the final estimates of R and C
+  list(R = R, C = C)
+  
+}
+
+get_T_list &lt;- function(Y, V_list, U) {
+  
+  T_list &lt;- list()
+  for (i in seq_len(n)) {
+    
+    T_list[[i]] &lt;- get_post_moment(U, V_list[[i]], Y[i, ])
+    
+  }
+  
+  return(T_list)
+  
+}
+
+loglik_em &lt;- function(Y, V_list, R_list, C_list, Pi) {
+  
+  K &lt;- length(Pi)
+  lik_mat &lt;- matrix(
+    data = 0,
+    nrow = nrow(Y),
+    ncol = K
+  )
+  
+  for (k in 1:(K - 1)) {
+    
+    lik_mat[, k] &lt;- Pi[k] * exp(
+      get_mvn_sep_loglik_per_pt(Y, V_list, R_list[[k]], C_list[[k]])
+    )
+    
+  }
+  
+  lik_mat[, K] &lt;- Pi[K] * exp(get_null_loglik_per_pt(Y, V_list))
+  ll &lt;- sum(log(rowSums(lik_mat)))
+  return(ll)
+  
+}
+
+optim_em_ed &lt;- function(
+    Y, V_list, p, q, K, maxiter = 100
+) {
+  
+  # initialize parameters
+  Pi &lt;- runif(K)
+  Pi &lt;- Pi / sum(Pi)
+  R_list &lt;- list()
+  C_list &lt;- list()
+  
+  for (k in 1:(K - 1)) {
+    
+    R_list[[k]] &lt;- diag(runif(p, min = 0.25, max = 2))
+    C_list[[k]] &lt;- diag(runif(q, min = 0.25, max = 2))
+    
+  }
+  
+  loglik_vec &lt;- c()
+  loglik &lt;- loglik_em(Y, V_list, R_list, C_list, Pi)
+  loglik_vec &lt;- c(loglik_vec, loglik)
+  
+  for (i in 1:maxiter) {
+    
+    print(glue::glue(&quot;Iteration {i}: loglik = {loglik}&quot;))
+    
+    responsibilities &lt;- get_responsibilities(Y, V_list, R_list, C_list, Pi)
+    Pi &lt;- update_Pi(responsibilities)
+      
+    # find closest separable covariance matrix for each mixture component
+    for (k in 1:(K - 1)) {
+      
+      T_list &lt;- get_T_list(Y, V_list, kronecker(R_list[[k]], C_list[[k]]))
+      opt_RC &lt;- opt_RC_given_T_omega(
+        T_list, 
+        R_list[[k]],
+        C_list[[k]], 
+        responsibilities[, k]
+      )
+      R_list[[k]] &lt;- opt_RC$R
+      C_list[[k]] &lt;- opt_RC$C
+      
+    }
+    
+    loglik &lt;- loglik_em(Y, V_list, R_list, C_list, Pi)
+    loglik_vec &lt;- c(loglik_vec, loglik)
+    
+  }
+  
+  return(
+    list(
+      Pi = Pi,
+      R_list = R_list,
+      C_list = C_list,
+      loglik = loglik_vec
+    )
+  )
+  
+}
+
+generate_point_normal_sim &lt;- function(n, p, q, s = 0.5) {
+  
+  n_zero &lt;- rbinom(1, n, s)
+  n_nz &lt;- n - n_zero
+  
+  R &lt;- matrixsampling::rwishart(n = 1, nu = 1, Sigma = diag(p))[,,1]
+  C &lt;- matrixsampling::rwishart(n = 1, nu = 1, Sigma = diag(q))[,,1]
+  U &lt;- kronecker(R, C)
+  
+  Y_nz &lt;- matrix(data = 0, nrow = n_nz, ncol = p*q)
+  V_list &lt;- list()
+  
+  for (i in seq_len(n_nz)) {
+    
+    obs_var &lt;- diag(runif(p*q, min = 0.5, max = 2))
+    V_list[[i]] &lt;- obs_var
+    Y_nz[i, ] &lt;- MASS::mvrnorm(
+      n = 1, mu = rep(0, p * q), Sigma = U + obs_var
+    )
+    
+  }
+  
+  Y_zero &lt;- matrix(data = 0, nrow = n_zero, ncol = p*q)
+
+  V_idx &lt;- n_nz + 1
+  
+  for (i in seq_len(n_zero)) {
+    
+    obs_var &lt;- diag(runif(p*q, min = 0.5, max = 2))
+    V_list[[V_idx]] &lt;- obs_var
+    Y_zero[i, ] &lt;- MASS::mvrnorm(
+      n = 1, mu = rep(0, p * q), Sigma = obs_var
+    )
+    V_idx &lt;- V_idx + 1
+    
+  }
+  
+  Y &lt;- rbind(Y_zero, Y_nz)
+  
+  return(
+    list(
+      Y = Y,
+      V_list = V_list,
+      pct_0 = n_zero / n,
+      U = U
+    )
+  )
+  
+}</code></pre>
+<pre class="r"><code>load(&quot;data/processed_data/cancer_sc_multicond.Rdata&quot;)</code></pre>
+<p>Now, I sampled the summary statistics from above into a training and
+test set (where I took a 2/3 1/3 split).</p>
+<pre class="r"><code>set.seed(1)
+# sample data
+samp_idx &lt;- sample.int(nrow(b_mat), size = as.integer((2/3) * nrow(b_mat)))
+b_samp &lt;- b_mat[samp_idx, ]
+se_samp &lt;- se_mat[samp_idx, ]</code></pre>
+<p>I fit the separable model above with <span
+class="math inline">\(4\)</span> non-null mixture components for 100
+iterations (as has been noted previously, the convergence of extreme
+deconvolution can be quite slow, so this algorithm did not
+converge).</p>
+<pre class="r"><code>em_out &lt;- optim_em_ed_cpp(
+  Y = t(b_samp), 
+  V_diag = t(se_samp),
+  p = 3,
+  q = 24,
+  K = 5,
+  maxiter = 100
+)
+
+readr::write_rds(em_out, &quot;data/fitted_models/cancer_sep_em_out.rds&quot;)</code></pre>
+<pre class="r"><code>em_out &lt;- readr::read_rds(&quot;data/fitted_models/cancer_sep_em_out.rds&quot;)</code></pre>
+<pre class="r"><code>test_idx &lt;- setdiff(seq_len(nrow(b_mat)), samp_idx)
+b_test &lt;- b_mat[test_idx, ]
+se_test &lt;- se_mat[test_idx, ]
+
+train_ll_sep &lt;- loglik_em(
+    Y_T = t(b_samp), 
+    R_list = em_out$R_list, 
+    C_list = em_out$C_list, 
+    V_diag = t(se_samp), 
+    Pi = em_out$Pi
+)
+
+test_ll_sep &lt;- loglik_em(
+    Y_T = t(b_test), 
+    R_list = em_out$R_list, 
+    C_list = em_out$C_list, 
+    V_diag = t(se_test), 
+    Pi = em_out$Pi
+)</code></pre>
+<pre class="r"><code>pm &lt;- t(get_mixture_post_mean(
+    Y_T = t(b_samp), R_list = em_out$R_list, C_list = em_out$C_list, V_diag = t(se_samp), Pi = em_out$Pi
+))</code></pre>
+<pre class="r"><code>marginal_cov1 &lt;- em_out$Pi[1] * kronecker(em_out$R_list[[1]], em_out$C_list[[1]]) +
+  em_out$Pi[2] * kronecker(em_out$R_list[[2]], em_out$C_list[[2]]) +
+  em_out$Pi[3] * kronecker(em_out$R_list[[3]], em_out$C_list[[3]]) +
+  em_out$Pi[4] * kronecker(em_out$R_list[[4]], em_out$C_list[[4]])</code></pre>
+<p>Below are the four mixture components fit by the model:</p>
+<pre class="r"><code>cov_df_list &lt;- list()
+for (k in 1:4) {
+  
+  cov_df &lt;- expand.grid(1:72, 1:72)
+  colnames(cov_df) &lt;- c(&quot;row&quot;, &quot;col&quot;)
+  cov_df$cov &lt;- as.vector(
+    kronecker(em_out$R_list[[k]], em_out$C_list[[k]])
+  )
+  cov_df$component &lt;- k
+  cov_df_list[[k]] &lt;- cov_df
+  
+}
+
+cov_all_df &lt;- do.call(rbind, cov_df_list)
+cov_all_df$component &lt;- as.factor(cov_all_df$component)
+
+library(ggplot2)
+ggplot(cov_all_df, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = &quot;blue&quot;,
+    mid = &quot;white&quot;,
+    high = &quot;red&quot;,
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  coord_fixed() +
+  scale_y_reverse() +
+  facet_wrap(~component)</code></pre>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" />
+These components have the following mixture weights:</p>
+<pre class="r"><code>pi &lt;- em_out$Pi
+pi &lt;- c(pi[5], pi)[1:5]
+names(pi) &lt;- c(&quot;null&quot;, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;)
+barplot(pi)</code></pre>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Marginalizing over the mixture weights results in the following
+covariance matrix:</p>
+<pre class="r"><code>mcov_df1 &lt;- expand.grid(1:72, 1:72)
+colnames(mcov_df1) &lt;- c(&quot;row&quot;, &quot;col&quot;)
+mcov_df1$cov &lt;- as.vector(marginal_cov1)
+  
+library(ggplot2)
+ggplot(mcov_df1, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = &quot;blue&quot;,
+    mid = &quot;white&quot;,
+    high = &quot;red&quot;,
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  coord_fixed() +
+  scale_y_reverse() </code></pre>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" />
+I then fit udr with <span class="math inline">\(4\)</span> unconstrained
+mixture components, applying a nuclear norm penalty with <span
+class="math inline">\(\lambda = 3 * 24\)</span>.</p>
+<pre class="r"><code>library(udr)
+
+fit0 &lt;- udr::ud_init(
+  dat = b_samp,
+  V = lapply(seq_len(nrow(se_samp)), function(i) diag(se_samp[i, ]^2)),
+  n_unconstrained = 4,
+  U_scaled = matrix(data = 0, nrow = 72, ncol = 72)
+)
+
+fit &lt;- ud_fit(fit0, control = list(maxiter = 100, unconstrained.update = &quot;ed&quot;, lambda = 72, penalty.type = &quot;nu&quot;))
+fit_out &lt;- list()
+fit_out$U &lt;- fit$U
+fit_out$Pi &lt;- fit$w
+readr::write_rds(fit_out, &quot;data/fitted_models/cancer_ud_fit.rds&quot;)</code></pre>
+<pre class="r"><code>cov_udr &lt;- readr::read_rds(&quot;data/fitted_models/cancer_ud_fit.rds&quot;)
+
+U_list_udr &lt;- list()
+
+for (k in 1:4) {
+  
+  U_list_udr[[k]] &lt;- cov_udr$U[[glue::glue(&quot;unconstrained{k}&quot;)]]$mat
+  
+}
+
+pi_udr &lt;- c(tail(cov_udr$Pi, 4), cov_udr$Pi[1])
+
+pm_udr &lt;- get_mixture_post_mean_non_sep(
+  Y_T = t(b_samp),
+  V_diag = t(se_samp),
+  U_list = U_list_udr,
+  Pi = pi_udr
+)</code></pre>
+<pre class="r"><code>train_ll_udr &lt;- loglik_em_non_sep(
+    Y_T = t(b_samp), 
+    U_list = U_list_udr, 
+    V_diag = t(se_samp), 
+    Pi = pi_udr
+)
+
+test_ll_udr &lt;- loglik_em_non_sep(
+    Y_T = t(b_test), 
+    U_list = U_list_udr, 
+    V_diag = t(se_test), 
+    Pi = pi_udr
+)</code></pre>
+<p>Below are the covariance matrices fit by the UD model.</p>
+<pre class="r"><code>cov_df_list &lt;- list()
+for (k in 1:4) {
+  
+  cov_df &lt;- expand.grid(1:72, 1:72)
+  colnames(cov_df) &lt;- c(&quot;row&quot;, &quot;col&quot;)
+  cov_df$cov &lt;- as.vector(
+    cov_udr$U[[glue::glue(&quot;unconstrained{k}&quot;)]]$mat
+  )
+  cov_df$component &lt;- k
+  cov_df_list[[k]] &lt;- cov_df
+  
+}
+
+cov_all_df &lt;- do.call(rbind, cov_df_list)
+cov_all_df$component &lt;- as.factor(cov_all_df$component)
+
+library(ggplot2)
+ggplot(cov_all_df, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = &quot;blue&quot;,
+    mid = &quot;white&quot;,
+    high = &quot;red&quot;,
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  coord_fixed() +
+  scale_y_reverse() +
+  facet_wrap(~component)</code></pre>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>These covariance matrices have the following mixture weights:</p>
+<pre class="r"><code>pi &lt;- cov_udr$Pi
+names(pi) &lt;- c(&quot;null&quot;, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;)
+barplot(pi)</code></pre>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>These mixture weights lead to the following marginal covariance
+matrix:</p>
+<pre class="r"><code>marginal_cov2 &lt;- cov_udr$Pi[2] * cov_udr$U[[glue::glue(&quot;unconstrained1&quot;)]]$mat +
+  cov_udr$Pi[3] * cov_udr$U[[glue::glue(&quot;unconstrained2&quot;)]]$mat +
+  cov_udr$Pi[4] * cov_udr$U[[glue::glue(&quot;unconstrained3&quot;)]]$mat +
+  cov_udr$Pi[5] * cov_udr$U[[glue::glue(&quot;unconstrained4&quot;)]]$mat</code></pre>
+<pre class="r"><code>mcov_df2 &lt;- expand.grid(1:72, 1:72)
+colnames(mcov_df2) &lt;- c(&quot;row&quot;, &quot;col&quot;)
+mcov_df2$cov &lt;- as.vector(marginal_cov2)
+  
+library(ggplot2)
+ggplot(mcov_df2, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = &quot;blue&quot;,
+    mid = &quot;white&quot;,
+    high = &quot;red&quot;,
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  coord_fixed() +
+  scale_y_reverse() </code></pre>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Below is the marginal covariance matrix of the separable model
+vs. the marginal covariance of the UD model.</p>
+<pre class="r"><code>mcov_df1$type &lt;- &quot;separable&quot;
+mcov_df2$type &lt;- &quot;UD&quot;
+mcov_df &lt;- rbind(mcov_df1, mcov_df2)
+  
+library(ggplot2)
+ggplot(mcov_df, aes(x = col, y = row, fill = cov)) +
+  geom_tile() +
+  # Optional: adjust the color scale
+  scale_fill_gradient2(
+    low = &quot;blue&quot;,
+    mid = &quot;white&quot;,
+    high = &quot;red&quot;,
+    midpoint = 0
+  ) +
+  theme_minimal() +
+  coord_fixed() +
+  scale_y_reverse() +
+  facet_wrap(~type)</code></pre>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Overall, the biggest difference appears to be the fact that the
+separable model fits a much larger null component than the udr model.
+Perhaps this is because there are some small effects with covariances
+that can’t easily be written as separable, so the model decides to
+incorporate them into a point mass.</p>
+<p>Finally, I compared the train and test log-likehoods (per point) for
+both models:</p>
+<pre class="r"><code>ll_vec &lt;- c(train_ll_udr / nrow(b_samp), train_ll_sep  / nrow(b_samp), test_ll_udr  / nrow(b_test), test_ll_sep / nrow(b_test))
+names(ll_vec) &lt;- c(&quot;UD - Train&quot;, &quot;Separable - Train&quot;, &quot;UD - Test&quot;, &quot;Separable - Test&quot;)
+barplot(ll_vec, ylab = &quot;Log-Likelihood (per point)&quot;)</code></pre>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" />
+Clearly, UD is doing a bit better.</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>Overall, I find it pretty cool that I can fit separable mixtures with
+an EM algorithm. While this algorithm is currently slow, I think it
+could be sped up substantially with an EM accelerator (e.g. SQUAREM).
+Also, each updates has many embarassingly parallel computations, so I
+could exploit that as well.</p>
+<p>The more important question here, for me, is when would it be
+advantageous to fit the separable model instead of UDR? For non iid data
+(i.e. when the variance differs between data points), I think that the
+separable model could likely be fit substantially faster because there
+are fewer parameters. This also probably makes the separable model
+applicable in cases where the number of conditions is large relative to
+the sample size.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.4.0 (2024-04-24)
+Platform: aarch64-apple-darwin20
+Running under: macOS Ventura 13.5
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/New_York
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] ggplot2_3.5.1
+
+loaded via a namespace (and not attached):
+ [1] gtable_0.3.5        jsonlite_1.8.8      highr_0.11         
+ [4] dplyr_1.1.4         compiler_4.4.0      promises_1.3.0     
+ [7] tidyselect_1.2.1    Rcpp_1.0.13         stringr_1.5.1      
+[10] git2r_0.33.0        later_1.3.2         jquerylib_0.1.4    
+[13] scales_1.3.0        yaml_2.3.8          fastmap_1.2.0      
+[16] readr_2.1.5         R6_2.5.1            labeling_0.4.3     
+[19] generics_0.1.3      RcppEigen_0.3.4.0.0 workflowr_1.7.1    
+[22] knitr_1.47          tibble_3.2.1        munsell_0.5.1      
+[25] rprojroot_2.0.4     bslib_0.7.0         pillar_1.9.0       
+[28] tzdb_0.4.0          rlang_1.1.4         utf8_1.2.4         
+[31] cachem_1.1.0        stringi_1.8.4       httpuv_1.6.15      
+[34] xfun_0.45           fs_1.6.4            sass_0.4.9         
+[37] cli_3.6.3           withr_3.0.0         magrittr_2.0.3     
+[40] grid_4.4.0          digest_0.6.36       BH_1.84.0-0        
+[43] rstudioapi_0.16.0   hms_1.1.3           lifecycle_1.0.4    
+[46] vctrs_0.6.5         evaluate_0.24.0     glue_1.7.0         
+[49] farver_2.1.2        colorspace_2.1-0    fansi_1.0.6        
+[52] rmarkdown_2.27      tools_4.4.0         pkgconfig_2.0.3    
+[55] htmltools_0.5.8.1  </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
