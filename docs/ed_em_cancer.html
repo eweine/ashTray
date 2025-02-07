@@ -401,7 +401,7 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-02-06
+<strong>Last updated:</strong> 2025-02-07
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -439,10 +439,10 @@ changes </a>
 <div id="strongRMarkdownfilestronguncommittedchanges"
 class="panel-collapse collapse">
 <div class="panel-body">
-<p>The R Markdown is untracked by Git. To know which version of the R
-Markdown file created these results, you’ll want to first commit it to
-the Git repo. If you’re still working on the analysis, you can ignore
-this warning. When you’re finished, you can run
+<p>The R Markdown file has unstaged changes. To know which version of
+the R Markdown file created these results, you’ll want to first commit
+it to the Git repo. If you’re still working on the analysis, you can
+ignore this warning. When you’re finished, you can run
 <code>wflow_publish</code> to commit the R Markdown file and build the
 HTML.</p>
 </div>
@@ -535,15 +535,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree7bb1f098d411030d69a34e702a32602e420f4d90targetblank7bb1f09a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree88b163e68bf329c2b7315527ed261559d3455060targetblank88b163ea">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/eweine/ashTray/tree/7bb1f098d411030d69a34e702a32602e420f4d90" target="_blank">7bb1f09</a>
+<a href="https://github.com/eweine/ashTray/tree/88b163e68bf329c2b7315527ed261559d3455060" target="_blank">88b163e</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree7bb1f098d411030d69a34e702a32602e420f4d90targetblank7bb1f09a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree88b163e68bf329c2b7315527ed261559d3455060targetblank88b163ea"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -553,7 +553,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/eweine/ashTray/tree/7bb1f098d411030d69a34e702a32602e420f4d90" target="_blank">7bb1f09</a>.
+<a href="https://github.com/eweine/ashTray/tree/88b163e68bf329c2b7315527ed261559d3455060" target="_blank">88b163e</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -570,12 +570,12 @@ were generated:
 Ignored files:
     Ignored:    .Rhistory
     Ignored:    analysis/.Rhistory
+    Ignored:    data/fitted_models/
+    Ignored:    data/processed_data/
+    Ignored:    data/raw_data/
 
-Untracked files:
-    Untracked:  analysis/ed_em_cancer.Rmd
-    Untracked:  data/fitted_models/
-    Untracked:  data/processed_data/
-    Untracked:  data/raw_data/
+Unstaged changes:
+    Modified:   analysis/ed_em_cancer.Rmd
 
 </code></pre>
 <p>
@@ -590,10 +590,74 @@ have uncommitted changes.
 <hr>
 </div>
 <div id="versions" class="tab-pane fade">
+
 <p>
-There are no past versions. Publish this analysis with
-<code>wflow_publish()</code> to start tracking its development.
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/ed_em_cancer.Rmd</code>) and HTML
+(<code>docs/ed_em_cancer.html</code>) files. If you’ve configured a
+remote Git repository (see <code>?wflow_git_remote</code>), click on the
+hyperlinks in the table below to view the files as they were in that
+past version.
 </p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/0be3f0fc4556712c71c502d2ea06110e32cd2be5/analysis/ed_em_cancer.Rmd" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+<td>
+added analysis of cancer data
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/eweine/ashTray/0be3f0fc4556712c71c502d2ea06110e32cd2be5/docs/ed_em_cancer.html" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+<td>
+added analysis of cancer data
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <hr>
 </div>
 </div>
@@ -604,28 +668,28 @@ There are no past versions. Publish this analysis with
 normal distributions to a real dataset, and comparing that to the UD
 model. Specifically, UD will be fitting the model:</p>
 <p><span class="math display">\[\begin{align*}
-    \textrm{vec}(\boldsymbol{Y}_{i}) &amp;\sim \mathcal{N}_{p}
+    \textrm{vec}(\boldsymbol{Y}_{i}) &amp;\sim \mathcal{N}_{pq}
 (\boldsymbol{\theta}_{i}, \boldsymbol{V}_{i}) \quad
 \textrm{independently for $i = 1, \dots, n$} \\
      \boldsymbol{\theta}_{1}, \dots, \boldsymbol{\theta}_{n}
 &amp;\overset{\text{iid}} {\sim}  \pi_{0}\boldsymbol{\delta}_{0} +
-\sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{p}(\boldsymbol{0},
+\sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{pq}(\boldsymbol{0},
 \boldsymbol{\Sigma}_{k}),
 \end{align*}\]</span></p>
 <p>which I will be comparing to the following separable mixture
 model:</p>
 <p><span class="math display">\[\begin{align*}
-    \textrm{vec}(\boldsymbol{Y}_{i}) &amp;\sim \mathcal{N}_{p}
+    \textrm{vec}(\boldsymbol{Y}_{i}) &amp;\sim \mathcal{N}_{pq}
 (\boldsymbol{\theta}_{i}, \boldsymbol{V}_{i}) \quad
 \textrm{independently for $i = 1, \dots, n$} \\
      \boldsymbol{\theta}_{1}, \dots, \boldsymbol{\theta}_{n}
 &amp;\overset{\text{iid}} {\sim}  \pi_{0}\boldsymbol{\delta}_{0} +
-\sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{p}(\boldsymbol{0},
+\sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{pq}(\boldsymbol{0},
 \boldsymbol{R}_{k} \otimes \boldsymbol{C}_{k}),
 \end{align*}\]</span></p>
 <p>where each matrix <span
 class="math inline">\(\boldsymbol{Y}_{i}\)</span> is <span
-class="math inline">\(pq \times pq\)</span>, each <span
+class="math inline">\(p \times q\)</span>, each <span
 class="math inline">\(\boldsymbol{R}_{k}\)</span> is <span
 class="math inline">\(p \times p\)</span>, and each <span
 class="math inline">\(\boldsymbol{C}_{k}\)</span> is <span
@@ -1853,13 +1917,87 @@ ggplot(cov_all_df, aes(x = col, y = row, fill = cov)) +
   coord_fixed() +
   scale_y_reverse() +
   facet_wrap(~component)</code></pre>
-<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" />
-These components have the following mixture weights:</p>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-11-1">
+Past versions of unnamed-chunk-11-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-11-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/0be3f0fc4556712c71c502d2ea06110e32cd2be5/docs/figure/ed_em_cancer.Rmd/unnamed-chunk-11-1.png" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>These components have the following mixture weights:</p>
 <pre class="r"><code>pi &lt;- em_out$Pi
 pi &lt;- c(pi[5], pi)[1:5]
 names(pi) &lt;- c(&quot;null&quot;, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;)
 barplot(pi)</code></pre>
 <p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-12-1">
+Past versions of unnamed-chunk-12-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-12-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/0be3f0fc4556712c71c502d2ea06110e32cd2be5/docs/figure/ed_em_cancer.Rmd/unnamed-chunk-12-1.png" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Marginalizing over the mixture weights results in the following
 covariance matrix:</p>
 <pre class="r"><code>mcov_df1 &lt;- expand.grid(1:72, 1:72)
@@ -1879,10 +2017,47 @@ ggplot(mcov_df1, aes(x = col, y = row, fill = cov)) +
   theme_minimal() +
   coord_fixed() +
   scale_y_reverse() </code></pre>
-<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" />
-I then fit udr with <span class="math inline">\(4\)</span> unconstrained
-mixture components, applying a nuclear norm penalty with <span
-class="math inline">\(\lambda = 3 * 24\)</span>.</p>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-13-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-13-1">
+Past versions of unnamed-chunk-13-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-13-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/0be3f0fc4556712c71c502d2ea06110e32cd2be5/docs/figure/ed_em_cancer.Rmd/unnamed-chunk-13-1.png" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>I then fit udr with <span class="math inline">\(4\)</span>
+unconstrained mixture components, applying a nuclear norm penalty with
+<span class="math inline">\(\lambda = 3 * 24\)</span>.</p>
 <pre class="r"><code>library(udr)
 
 fit0 &lt;- udr::ud_init(
@@ -1960,11 +2135,85 @@ ggplot(cov_all_df, aes(x = col, y = row, fill = cov)) +
   scale_y_reverse() +
   facet_wrap(~component)</code></pre>
 <p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-17-1">
+Past versions of unnamed-chunk-17-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-17-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/0be3f0fc4556712c71c502d2ea06110e32cd2be5/docs/figure/ed_em_cancer.Rmd/unnamed-chunk-17-1.png" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>These covariance matrices have the following mixture weights:</p>
 <pre class="r"><code>pi &lt;- cov_udr$Pi
 names(pi) &lt;- c(&quot;null&quot;, &quot;1&quot;, &quot;2&quot;, &quot;3&quot;, &quot;4&quot;)
 barplot(pi)</code></pre>
 <p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-18-1">
+Past versions of unnamed-chunk-18-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-18-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/0be3f0fc4556712c71c502d2ea06110e32cd2be5/docs/figure/ed_em_cancer.Rmd/unnamed-chunk-18-1.png" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>These mixture weights lead to the following marginal covariance
 matrix:</p>
 <pre class="r"><code>marginal_cov2 &lt;- cov_udr$Pi[2] * cov_udr$U[[glue::glue(&quot;unconstrained1&quot;)]]$mat +
@@ -1989,6 +2238,43 @@ ggplot(mcov_df2, aes(x = col, y = row, fill = cov)) +
   coord_fixed() +
   scale_y_reverse() </code></pre>
 <p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-20-1">
+Past versions of unnamed-chunk-20-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-20-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/0be3f0fc4556712c71c502d2ea06110e32cd2be5/docs/figure/ed_em_cancer.Rmd/unnamed-chunk-20-1.png" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Below is the marginal covariance matrix of the separable model
 vs. the marginal covariance of the UD model.</p>
 <pre class="r"><code>mcov_df1$type &lt;- &quot;separable&quot;
@@ -2010,6 +2296,43 @@ ggplot(mcov_df, aes(x = col, y = row, fill = cov)) +
   scale_y_reverse() +
   facet_wrap(~type)</code></pre>
 <p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-21-1">
+Past versions of unnamed-chunk-21-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-21-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/0be3f0fc4556712c71c502d2ea06110e32cd2be5/docs/figure/ed_em_cancer.Rmd/unnamed-chunk-21-1.png" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>Overall, the biggest difference appears to be the fact that the
 separable model fits a much larger null component than the udr model.
 Perhaps this is because there are some small effects with covariances
@@ -2020,8 +2343,45 @@ both models:</p>
 <pre class="r"><code>ll_vec &lt;- c(train_ll_udr / nrow(b_samp), train_ll_sep  / nrow(b_samp), test_ll_udr  / nrow(b_test), test_ll_sep / nrow(b_test))
 names(ll_vec) &lt;- c(&quot;UD - Train&quot;, &quot;Separable - Train&quot;, &quot;UD - Test&quot;, &quot;Separable - Test&quot;)
 barplot(ll_vec, ylab = &quot;Log-Likelihood (per point)&quot;)</code></pre>
-<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" />
-Clearly, UD is doing a bit better.</p>
+<p><img src="figure/ed_em_cancer.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-22-1">
+Past versions of unnamed-chunk-22-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-22-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/0be3f0fc4556712c71c502d2ea06110e32cd2be5/docs/figure/ed_em_cancer.Rmd/unnamed-chunk-22-1.png" target="_blank">0be3f0f</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-06
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Clearly, UD is doing a bit better.</p>
 </div>
 <div id="conclusion" class="section level2">
 <h2>Conclusion</h2>
@@ -2067,25 +2427,25 @@ other attached packages:
 [1] ggplot2_3.5.1
 
 loaded via a namespace (and not attached):
- [1] gtable_0.3.5        jsonlite_1.8.8      highr_0.11         
- [4] dplyr_1.1.4         compiler_4.4.0      promises_1.3.0     
- [7] tidyselect_1.2.1    Rcpp_1.0.13         stringr_1.5.1      
-[10] git2r_0.33.0        later_1.3.2         jquerylib_0.1.4    
-[13] scales_1.3.0        yaml_2.3.8          fastmap_1.2.0      
-[16] readr_2.1.5         R6_2.5.1            labeling_0.4.3     
-[19] generics_0.1.3      RcppEigen_0.3.4.0.0 workflowr_1.7.1    
-[22] knitr_1.47          tibble_3.2.1        munsell_0.5.1      
-[25] rprojroot_2.0.4     bslib_0.7.0         pillar_1.9.0       
-[28] tzdb_0.4.0          rlang_1.1.4         utf8_1.2.4         
-[31] cachem_1.1.0        stringi_1.8.4       httpuv_1.6.15      
-[34] xfun_0.45           fs_1.6.4            sass_0.4.9         
-[37] cli_3.6.3           withr_3.0.0         magrittr_2.0.3     
-[40] grid_4.4.0          digest_0.6.36       BH_1.84.0-0        
-[43] rstudioapi_0.16.0   hms_1.1.3           lifecycle_1.0.4    
-[46] vctrs_0.6.5         evaluate_0.24.0     glue_1.7.0         
-[49] farver_2.1.2        colorspace_2.1-0    fansi_1.0.6        
-[52] rmarkdown_2.27      tools_4.4.0         pkgconfig_2.0.3    
-[55] htmltools_0.5.8.1  </code></pre>
+ [1] sass_0.4.9          utf8_1.2.4          generics_0.1.3     
+ [4] stringi_1.8.4       hms_1.1.3           digest_0.6.36      
+ [7] magrittr_2.0.3      RcppEigen_0.3.4.0.0 evaluate_0.24.0    
+[10] grid_4.4.0          fastmap_1.2.0       rprojroot_2.0.4    
+[13] workflowr_1.7.1     jsonlite_1.8.8      whisker_0.4.1      
+[16] promises_1.3.0      fansi_1.0.6         scales_1.3.0       
+[19] jquerylib_0.1.4     cli_3.6.3           rlang_1.1.4        
+[22] munsell_0.5.1       withr_3.0.0         cachem_1.1.0       
+[25] yaml_2.3.8          tools_4.4.0         tzdb_0.4.0         
+[28] dplyr_1.1.4         colorspace_2.1-0    httpuv_1.6.15      
+[31] vctrs_0.6.5         R6_2.5.1            lifecycle_1.0.4    
+[34] git2r_0.33.0        stringr_1.5.1       fs_1.6.4           
+[37] pkgconfig_2.0.3     pillar_1.9.0        bslib_0.7.0        
+[40] later_1.3.2         gtable_0.3.5        glue_1.7.0         
+[43] Rcpp_1.0.13         xfun_0.45           tibble_3.2.1       
+[46] tidyselect_1.2.1    highr_0.11          rstudioapi_0.16.0  
+[49] knitr_1.47          farver_2.1.2        htmltools_0.5.8.1  
+[52] rmarkdown_2.27      BH_1.84.0-0         labeling_0.4.3     
+[55] readr_2.1.5         compiler_4.4.0     </code></pre>
 </div>
 </div>
 

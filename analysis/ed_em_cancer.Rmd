@@ -15,18 +15,18 @@ knitr::opts_chunk$set(echo = TRUE)
 Here, I was interested in trying out fitting a mixture of separable normal distributions to a real dataset, and comparing that to the UD model. Specifically, UD will be fitting the model:
 
 \begin{align*}
-    \textrm{vec}(\boldsymbol{Y}_{i}) &\sim \mathcal{N}_{p} (\boldsymbol{\theta}_{i}, \boldsymbol{V}_{i}) \quad \textrm{independently for $i = 1, \dots, n$} \\
-     \boldsymbol{\theta}_{1}, \dots, \boldsymbol{\theta}_{n} &\overset{\text{iid}} {\sim}  \pi_{0}\boldsymbol{\delta}_{0} + \sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{p}(\boldsymbol{0}, \boldsymbol{\Sigma}_{k}), 
+    \textrm{vec}(\boldsymbol{Y}_{i}) &\sim \mathcal{N}_{pq} (\boldsymbol{\theta}_{i}, \boldsymbol{V}_{i}) \quad \textrm{independently for $i = 1, \dots, n$} \\
+     \boldsymbol{\theta}_{1}, \dots, \boldsymbol{\theta}_{n} &\overset{\text{iid}} {\sim}  \pi_{0}\boldsymbol{\delta}_{0} + \sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{pq}(\boldsymbol{0}, \boldsymbol{\Sigma}_{k}), 
 \end{align*}
 
 which I will be comparing to the following separable mixture model:
 
 \begin{align*}
-    \textrm{vec}(\boldsymbol{Y}_{i}) &\sim \mathcal{N}_{p} (\boldsymbol{\theta}_{i}, \boldsymbol{V}_{i}) \quad \textrm{independently for $i = 1, \dots, n$} \\
-     \boldsymbol{\theta}_{1}, \dots, \boldsymbol{\theta}_{n} &\overset{\text{iid}} {\sim}  \pi_{0}\boldsymbol{\delta}_{0} + \sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{p}(\boldsymbol{0}, \boldsymbol{R}_{k} \otimes \boldsymbol{C}_{k}), 
+    \textrm{vec}(\boldsymbol{Y}_{i}) &\sim \mathcal{N}_{pq} (\boldsymbol{\theta}_{i}, \boldsymbol{V}_{i}) \quad \textrm{independently for $i = 1, \dots, n$} \\
+     \boldsymbol{\theta}_{1}, \dots, \boldsymbol{\theta}_{n} &\overset{\text{iid}} {\sim}  \pi_{0}\boldsymbol{\delta}_{0} + \sum\limits_{k = 1}^{K} \pi_{k} \mathcal{N}_{pq}(\boldsymbol{0}, \boldsymbol{R}_{k} \otimes \boldsymbol{C}_{k}), 
 \end{align*}
 
-where each matrix $\boldsymbol{Y}_{i}$ is $pq \times pq$, each $\boldsymbol{R}_{k}$ is $p \times p$, and each $\boldsymbol{C}_{k}$ is $q \times q$.
+where each matrix $\boldsymbol{Y}_{i}$ is $p \times q$, each $\boldsymbol{R}_{k}$ is $p \times p$, and each $\boldsymbol{C}_{k}$ is $q \times q$.
 
 I will be fitting these models to a [dataset](https://www.nature.com/articles/s41467-020-17440-w) of 3 different cancer drugs applied to 24 different cancer cell lines. For each cell line and each treatment, I computed differential expression summary statistics (vs. a control treatment) by treating each cell as an independent observation and fitting a quasiPoisson GLM.
 
