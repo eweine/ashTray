@@ -229,7 +229,7 @@ for $\boldsymbol{R}_{k}$ and $\boldsymbol{C}_{k}$. This can be optimized by alte
 \boldsymbol{C}_{k} &\;\leftarrow\; \frac{1}{Wp}\,\sum_{i=1}^n \omega_i\,\mathrm{Tr}_1\Bigl[(\boldsymbol{R}_{k}^{-1}\otimes \boldsymbol{I}_q)\,\boldsymbol{T}_i\Bigr],
 \end{aligned}
 
-where $W = \sum_{i = 1}^{n} \omega_{ik}$, $\boldsymbol{T}_{i} = \boldsymbol{\mu}_{i}^{T} \boldsymbol{\mu}_{i} + \boldsymbol{S}_{i}$, and $Tr_{1}$ and $Tr_{2}$ are partial traces over blocks of size $q$ and $p$, respectively
+where $W = \sum_{i = 1}^{n} \omega_{ik}$, $\boldsymbol{T}_{i} = \boldsymbol{\mu}_{i}^{T} \boldsymbol{\mu}_{i} + \boldsymbol{S}_{i}$, and $Tr_{1}$ and $Tr_{2}$ are partial traces over blocks of size $p$ and $q$, respectively
 
 ```{Rcpp}
 // [[Rcpp::depends(RcppEigen)]]
