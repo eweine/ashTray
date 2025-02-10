@@ -401,13 +401,13 @@ aria-hidden="true"></span> </a>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2025-02-07
+<strong>Last updated:</strong> 2025-02-10
 </p>
 <p>
 <strong>Checks:</strong> <span
-class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 5
 <span class="glyphicon glyphicon-exclamation-sign text-danger"
-aria-hidden="true"></span> 1
+aria-hidden="true"></span> 2
 </p>
 <p>
 <strong>Knit directory:</strong> <code>ashTray/</code> <span
@@ -520,30 +520,56 @@ run.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
-<span class="glyphicon glyphicon-ok text-success"
-aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongabsolute">
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> <strong>File paths:</strong> absolute </a>
 </p>
 </div>
-<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div id="strongFilepathsstrongabsolute" class="panel-collapse collapse">
 <div class="panel-body">
-<p>Great job! Using relative paths to the files within your workflowr
-project makes it easier to run your code on other machines.</p>
+<p>
+Using absolute paths to the files within your workflowr project makes it
+difficult for you and others to run your code on a different machine.
+Change the absolute path(s) below to the suggested relative path(s) to
+make your code more reproducible.
+</p>
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th style="text-align:left;">
+absolute
+</th>
+<th style="text-align:left;">
+relative
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+~/Documents/ashTray/
+</td>
+<td style="text-align:left;">
+.
+</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree5cf4b6981fd40aef8afac6fdc84dd78c8895ce4dtargetblank5cf4b69a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree858f53526c23ed858a2eaa682493625eb2a77327targetblank858f535a">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/eweine/ashTray/tree/5cf4b6981fd40aef8afac6fdc84dd78c8895ce4d" target="_blank">5cf4b69</a>
+<a href="https://github.com/eweine/ashTray/tree/858f53526c23ed858a2eaa682493625eb2a77327" target="_blank">858f535</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree5cf4b6981fd40aef8afac6fdc84dd78c8895ce4dtargetblank5cf4b69a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomeweineashTraytree858f53526c23ed858a2eaa682493625eb2a77327targetblank858f535a"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -553,7 +579,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/eweine/ashTray/tree/5cf4b6981fd40aef8afac6fdc84dd78c8895ce4d" target="_blank">5cf4b69</a>.
+<a href="https://github.com/eweine/ashTray/tree/858f53526c23ed858a2eaa682493625eb2a77327" target="_blank">858f535</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -569,13 +595,18 @@ were generated:
 <pre><code>
 Ignored files:
     Ignored:    .Rhistory
+    Ignored:    .Rproj.user/
     Ignored:    analysis/.Rhistory
     Ignored:    data/fitted_models/
     Ignored:    data/processed_data/
     Ignored:    data/raw_data/
 
+Untracked files:
+    Untracked:  analysis/dimension_sims.Rmd
+
 Unstaged changes:
     Modified:   analysis/ed_em_cancer.Rmd
+    Modified:   analysis/index.Rmd
 
 </code></pre>
 <p>
@@ -621,6 +652,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/eweine/ashTray/blob/858f53526c23ed858a2eaa682493625eb2a77327/analysis/ed_em_cancer.Rmd" target="_blank">858f535</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-07
+</td>
+<td>
+fixed more notation
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/eweine/ashTray/858f53526c23ed858a2eaa682493625eb2a77327/docs/ed_em_cancer.html" target="_blank">858f535</a>
+</td>
+<td>
+Eric Weine
+</td>
+<td>
+2025-02-07
+</td>
+<td>
+fixed more notation
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -1885,7 +1950,7 @@ deconvolution can be quite slow, so this algorithm did not
 converge).</p>
 <pre class="r"><code>em_out &lt;- optim_em_ed_cpp(
   Y = t(b_samp), 
-  V_diag = t(se_samp),
+  V_diag = t(se_samp) ^ 2,
   p = 3,
   q = 24,
   K = 5,
@@ -1902,7 +1967,7 @@ train_ll_sep &lt;- loglik_em(
     Y_T = t(b_samp), 
     R_list = em_out$R_list, 
     C_list = em_out$C_list, 
-    V_diag = t(se_samp), 
+    V_diag = t(se_samp) ^ 2, 
     Pi = em_out$Pi
 )
 
@@ -1910,7 +1975,7 @@ test_ll_sep &lt;- loglik_em(
     Y_T = t(b_test), 
     R_list = em_out$R_list, 
     C_list = em_out$C_list, 
-    V_diag = t(se_test), 
+    V_diag = t(se_test) ^ 2, 
     Pi = em_out$Pi
 )</code></pre>
 <pre class="r"><code>pm &lt;- t(get_mixture_post_mean(
@@ -2127,14 +2192,14 @@ pm_udr &lt;- get_mixture_post_mean_non_sep(
 <pre class="r"><code>train_ll_udr &lt;- loglik_em_non_sep(
     Y_T = t(b_samp), 
     U_list = U_list_udr, 
-    V_diag = t(se_samp), 
+    V_diag = t(se_samp) ^ 2, 
     Pi = pi_udr
 )
 
 test_ll_udr &lt;- loglik_em_non_sep(
     Y_T = t(b_test), 
     U_list = U_list_udr, 
-    V_diag = t(se_test), 
+    V_diag = t(se_test) ^ 2, 
     Pi = pi_udr
 )</code></pre>
 <p>Below are the covariance matrices fit by the UD model.</p>
@@ -2367,11 +2432,6 @@ Eric Weine
 </table>
 </div>
 </div>
-<p>Overall, the biggest difference appears to be the fact that the
-separable model fits a much larger null component than the udr model.
-Perhaps this is because there are some small effects with covariances
-that can’t easily be written as separable, so the model decides to
-incorporate them into a point mass.</p>
 <p>Finally, I compared the train and test log-likehoods (per point) for
 both models:</p>
 <pre class="r"><code>ll_vec &lt;- c(train_ll_udr / nrow(b_samp), train_ll_sep  / nrow(b_samp), test_ll_udr  / nrow(b_test), test_ll_sep / nrow(b_test))

@@ -18,3 +18,5 @@ Welcome to my research website.
 
 [Analysis of Cancer Data](ed_em_cancer.html)
 
+[Comparing TED and the Separable MLE for Increasing Sample Sizes](dimension_sims.html)
+
