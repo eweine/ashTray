@@ -1,0 +1,157 @@
+---
+title: "Simulating Data from An Unconstrained Covariance"
+output:
+  workflowr::wflow_html:
+    code_folding: hide
+date: "2025-02-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '~/Documents/ashTray/')
+```
+
+## Simulation
+
+Here, I wanted to understand what happens when I generate data from a non-separable covariance matrix and then fit a mixture model of where each component has a separable covariance to the data.
+
+Specifically, I generate data from the model:
+
+\begin{align*}
+    \textrm{vec}(\boldsymbol{Y}_{i}) &\sim \mathcal{N}_{pq} (\boldsymbol{\theta}_{i}, \boldsymbol{I}_{pq}) \quad \textrm{independently for $i = 1, \dots, n$} \\
+     \boldsymbol{\theta}_{1}, \dots, \boldsymbol{\theta}_{n} &\overset{\text{iid}} {\sim} \mathcal{N}_{pq}(\boldsymbol{0}, \boldsymbol{\Sigma}) \\
+\boldsymbol{\Sigma} & \sim IW(\boldsymbol{I}_{pq}, pq + 2).
+\end{align*}
+
+Below, I provide a simulation where $p = q = 7$. To these data, I fit a) a mixture model where each covariance $\boldsymbol{\Sigma}_{k} = \boldsymbol{R}_{k} \otimes \boldsymbol{C}_{k}$ for some $p \times p$ matrix $\boldsymbol{R}_{k}$ and some $q \times q$ matrix $\boldsymbol{C}_{k}$ and b) the MLE $\boldsymbol{\Sigma}$ using a truncated eigenvalue decomposition.
+
+```{r, eval=FALSE}
+# Simulation parameters
+n_train <- 1000
+n_test  <- 2500
+d       <- 49
+n_iter  <- 5  # outer iterations
+
+# Create a grid of tasks with one row per (i, K) combination.
+tasks <- expand.grid(i = 1:n_iter, K = 2:22)
+
+simulate_task <- function(task) {
+  # Extract parameters for this task.
+  i <- task$i
+  K <- task$K
+
+  # Set the seed based solely on the iteration i.
+  # This guarantees that all tasks with the same i will generate identical data.
+  set.seed(1 + i)
+
+  # Generate data and split into training and test sets.
+  Y <- generate_mvn_data(n_train + n_test, d)
+  samp_idx <- sample.int(nrow(Y), size = n_train)
+  Y_train <- Y[samp_idx, ]
+  test_idx <- setdiff(seq_len(nrow(Y)), samp_idx)
+  Y_test <- Y[test_idx, ]
+
+  # Print status (note: when running in parallel the print output order may be non‐deterministic).
+  print(glue("Fitting iteration {i} of separation rank {K}"))
+
+  # Fit UDR (no penalty).
+  U_udr <- ted(cov(Y_train))
+
+  # Fit the separable model.
+  sep_fit <- optim_em_ed_cpp(
+    Y_T = t(Y_train),
+    V_diag = matrix(1, nrow = d, ncol = n_train),
+    p = 7,
+    q = 7,
+    K = K,
+    maxiter = 1000
+  )
+
+  # Compute log-likelihoods.
+  res <- list(
+    iter         = i,
+    K            = K,
+    udr_train_ll = get_loglik(Y_train, U_udr) / n_train,
+    udr_test_ll  = get_loglik(Y_test, U_udr) / n_test,
+    sep_train_ll = loglik_em(
+      Y_T    = t(Y_train),
+      R_list = sep_fit$R_list,
+      C_list = sep_fit$C_list,
+      V_diag = matrix(1, nrow = d, ncol = n_train),
+      Pi     = sep_fit$Pi
+    ) / n_train,
+    sep_test_ll  = loglik_em(
+      Y_T    = t(Y_test),
+      R_list = sep_fit$R_list,
+      C_list = sep_fit$C_list,
+      V_diag = matrix(1, nrow = d, ncol = n_test),
+      Pi     = sep_fit$Pi
+    ) / n_test
+  )
+
+  return(res)
+}
+
+# Run all tasks in parallel.
+# (The total number of tasks is n_iter * length(2:10)).
+all_results <- mclapply(
+  seq_len(nrow(tasks)),
+  function(idx) simulate_task(tasks[idx, ]),
+  mc.cores = 28
+)
+
+# Convert the list of results into a data frame.
+results_df <- do.call(rbind, lapply(all_results, function(res) {
+  data.frame(
+    iter         = res$iter,
+    K            = res$K,
+    udr_train_ll = res$udr_train_ll,
+    udr_test_ll  = res$udr_test_ll,
+    sep_train_ll = res$sep_train_ll,
+    sep_test_ll  = res$sep_test_ll
+  )
+}))
+
+# Save the results.
+readr::write_rds(results_df, "separable_sim.rds")
+```
+
+```{r, include=FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+Below is a plot showing the difference in training and test log likelihood (ted - separable) as I increase the number of mixture components in the separable model:
+
+```{r}
+res <- readr::read_rds("data/processed_data/separable_sim.rds")
+
+res_sum_df <- res %>%
+  dplyr::group_by(
+    K
+  ) %>%
+  dplyr::summarise(
+    udr_train_ll = mean(udr_train_ll),
+    udr_test_ll = mean(udr_test_ll),
+    sep_train_ll = mean(sep_train_ll),
+    sep_test_ll = mean(sep_test_ll)
+  )
+
+res_sum_df$test_lik_diff <- res_sum_df$sep_test_ll - res_sum_df$udr_test_ll
+res_sum_df$train_lik_diff <- res_sum_df$sep_train_ll - res_sum_df$udr_train_ll
+
+plot_df <- data.frame(
+  K = rep(res_sum_df$K, 2),
+  loglik_diff = c(res_sum_df$test_lik_diff, res_sum_df$train_lik_diff),
+  dataset = c(rep("test", nrow(res_sum_df)), rep("train", nrow(res_sum_df)))
+)
+
+ggplot(data = plot_df) +
+  geom_line(aes(x = K - 1, y = loglik_diff, linetype = dataset)) +
+  xlab("Mixture Components") +
+  cowplot::theme_cowplot() +
+  ylab("Log-likelihood Difference (Per Point)") +
+  scale_y_continuous(limits = c(-10, 0), expand = c(0, 0))
+```
+
+Though the separable model certainly improves as you add more components, it's clear that at about $K = 5$ the improvement is negligible. And, even with a large number of components, the separable model still performs much worse than the unrestricted MLE.

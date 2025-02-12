@@ -20,3 +20,5 @@ Welcome to my research website.
 
 [Comparing TED and the Separable MLE for Increasing Sample Sizes](dimension_sims.html)
 
+[Simulating Data from an Arbitrary Covariance Matrix](full_sep_rank_sim.html)
+

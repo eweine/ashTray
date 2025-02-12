@@ -1453,6 +1453,53 @@ barplot(ll_vec, ylab = "Log-Likelihood (per point)")
 ```
 Clearly, UD is doing a bit better.
 
+## Experimenting with different training set sizes / mixture components
+
+Here, I wanted to understand if changing the size of the training set (which was set to $66\%$ of the full dataset about $n \approx 13,000$) or the number of mixture components fit by the separable model would change the relative performance on the test set. To understand this, I sampled training sets on a grid from size $1,000$ to $13,000$, and I compared the performance of a UDR model with 3 (non-null) mixture components against both a separable model with 3 non-null mixture components and a separable model with 9 non-null mixture components. The results are shown below:
+
+```{r, include=FALSE}
+library(ggplot2)
+library(dplyr)
+```
+
+
+```{r}
+res <- readr::read_rds("data/processed_data/log_likelihood_res.rds")
+
+res_sum_df <- res %>%
+  dplyr::group_by(
+    train_size
+  ) %>%
+  dplyr::summarise(
+    train_ll_udr = mean(train_ll_udr),
+    test_ll_udr = mean(test_ll_udr),
+    train_ll_sep3 = mean(train_ll_sep3),
+    test_ll_sep3 = mean(test_ll_sep3),
+    train_ll_sep9 = mean(train_ll_sep9),
+    test_ll_sep9 = mean(test_ll_sep9)
+  )
+
+df_long <- res_sum_df %>%
+  tidyr::pivot_longer(cols = -train_size, 
+               names_to = "metric",
+               values_to = "ll") %>%
+  mutate(dataset = ifelse(grepl("train", metric), "train", "test"),
+         model = case_when(
+           grepl("udr", metric) ~ "udr",
+           grepl("sep3", metric) ~ "sep3",
+           grepl("sep9", metric) ~ "sep9"
+         )) %>%
+  select(train_size, ll, dataset, model)
+
+ggplot(data = df_long, aes(x = train_size, y = ll)) +
+  geom_line(aes(color = model, linetype = dataset)) +
+  xlab("Train Size") +
+  ylab("Log-likelihood (per point)") +
+  cowplot::theme_cowplot() +
+  scale_y_continuous(limits = c(-50, 0), expand = c(0, 0))
+```
+Here, we can see that there is some overfitting for the smallest training datasets, but quickly this goes away. In addition, the separable model with $9$ components performs just barely better than the separable model with $3$ components, and still well below the ud model. It seems that there is just some structure in this dataset that cannot be captured by a separable covariance matrix.
+
 ## Conclusion
 
 Overall, I find it pretty cool that I can fit separable mixtures with an EM algorithm. While this algorithm is currently slow, I think it could be sped up substantially with an EM accelerator (e.g. SQUAREM). Also, each updates has many embarassingly parallel computations, so I could exploit that as well. 
